@@ -37,6 +37,30 @@ jobs:
           VITE_ADMIN_EMAILS: ${{ secrets.VITE_ADMIN_EMAILS }}
           VITE_IMGBB_API_KEY: ${{ secrets.VITE_IMGBB_API_KEY }}
 
+      - name: Inspect Remote FTP Directories
+        run: |
+          python3 -c "
+          import ftplib, os
+          ftp = ftplib.FTP(os.environ['FTP_SERVER'])
+          ftp.login(os.environ['FTP_USERNAME'], os.environ['FTP_PASSWORD'])
+          print('--- Current Working Directory ---')
+          print(ftp.pwd())
+          print('--- Current Directory Listing ---')
+          ftp.retrlines('LIST')
+          print('--- public_html listing (if exists) ---')
+          try:
+              ftp.cwd('public_html')
+              print('Inside public_html:')
+              ftp.retrlines('LIST')
+          except Exception as e:
+              print('Could not cwd to public_html:', e)
+          ftp.quit()
+          "
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+
       - name: Deploy to Hostinger via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
