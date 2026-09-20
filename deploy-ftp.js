@@ -19,8 +19,22 @@ const __dirname = path.dirname(__filename);
     });
     console.log('Successfully connected to Hostinger FTP!');
 
-    console.log('Navigating to public_html...');
-    await client.ensureDir('public_html');
+    const currentDir = await client.pwd();
+    console.log('Current working directory:', currentDir);
+
+    if (!currentDir.endsWith('public_html')) {
+      console.log('Navigating to public_html...');
+      await client.ensureDir('public_html');
+    }
+
+    // Clean up any accidentally created nested public_html folder
+    try {
+      await client.removeDir('public_html');
+    } catch (e) {
+      // Ignore if it doesn't exist
+    }
+
+    console.log('Clearing old files in public_html...');
     await client.clearWorkingDir();
     console.log('public_html directory cleared for clean deployment.');
 
@@ -29,7 +43,7 @@ const __dirname = path.dirname(__filename);
     await client.uploadFromDir(distPath);
     console.log('All files uploaded successfully!');
 
-    console.log('Verifying files in public_html;');
+    console.log('Verifying files in public_html:');
     const files = await client.list();
     for (const f of files) {
       console.log(` - ${f.isDirectory ? '[DIR] ' : '[FILE] '}${f.name} (${f.size} bytes)`);
