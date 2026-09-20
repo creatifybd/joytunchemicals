@@ -19,31 +19,38 @@ const __dirname = path.dirname(__filename);
     });
     console.log('Successfully connected to Hostinger FTP!');
 
-    const currentDir = await client.pwd();
-    console.log('Current working directory:', currentDir);
-
-    if (!currentDir.endsWith('public_html')) {
-      console.log('Navigating to public_html...');
-      await client.ensureDir('public_html');
+    console.log('Initial PWD:', await client.pwd());
+    console.log('Listing initial directory:');
+    const rootList = await client.list();
+    for (const f of rootList) {
+      console.log(` - ${f.isDirectory ? '[DIR] ' : '[FILE] '}${f.name} (${f.size} bytes)`);
     }
 
-    // Clean up any accidentally created nested public_html folder
     try {
-      await client.removeDir('public_html');
-    } catch (e) {
-      // Ignore if it doesn't exist
+      await client.cd('/');
+      console.log('PWD after cd /:', await client.pwd());
+      const rootCdList = await client.list();
+      console.log('Listing /:');
+      for (const f of rootCdList) {
+        console.log(` - ${f.isDirectory ? '[DIR] ' : '[FILE] '}${f.name} (${f.size} bytes)`);
+      }
+    } catch(e) {
+      console.log('Could not cd /:', e.message);
     }
 
-    console.log('Clearing old files in public_html...');
-    await client.clearWorkingDir();
-    console.log('public_html directory cleared for clean deployment.');
+    try {
+      await client.cd('/public_html');
+      console.log('PWD after cd /public_html:', await client.pwd());
+    } catch (e) {
+      console.log('Could not cd /public_html, staying in current:', e.message);
+    }
 
     const distPath = path.resolve(__dirname, 'dist');
-    console.log('Uploading build files from ' + distPath + ' to public_html...');
+    console.log('Uploading build files from ' + distPath + ' to ' + (await client.pwd()) + '...');
     await client.uploadFromDir(distPath);
     console.log('All files uploaded successfully!');
 
-    console.log('Verifying files in public_html:');
+    console.log('Final verification of files in ' + (await client.pwd()) + ':');
     const files = await client.list();
     for (const f of files) {
       console.log(` - ${f.isDirectory ? '[DIR] ' : '[FILE] '}${f.name} (${f.size} bytes)`);
@@ -57,5 +64,4 @@ const __dirname = path.dirname(__filename);
     client.close();
   }
 }
-
-deploy();
+	deploy();
