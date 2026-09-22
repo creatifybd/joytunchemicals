@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #0a3d8f;
+  --color-accent: #00c2a8;
+  --color-dark: #060f2e;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans Variable', sans-serif;
+  color: var(--color-dark);
+  overflow-x: hidden;
+}
+
+.font-outfit { font-family: 'Manrope Variable', sans-serif; }
+
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-ticker {
+  animation: ticker 55s linear infinite;
+}
+
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
