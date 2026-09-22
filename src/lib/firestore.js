@@ -31,9 +31,11 @@ export const addProduct = (data) =>
   addDoc(collection(db, 'products'), { ...data, createdAt: serverTimestamp() })
 
 export const updateProduct = (id, data) =>
-  updateDoc(doc(db, 'products', id), { ...data, updatedAt: serverTimestamp() })
+  setDoc(doc(db, 'products', id), { ...data, updatedAt: serverTimestamp(), createdAt: data.createdAt || serverTimestamp() }, { merge: true })
 
-export const deleteProduct = (id) => deleteDoc(doc(db, 'products', id))
+export const deleteProduct = (id) => id.startsWith('joytun-')
+  ? setDoc(doc(db, 'products', id), { status: 'archived', createdAt: serverTimestamp(), updatedAt: serverTimestamp() }, { merge: true })
+  : deleteDoc(doc(db, 'products', id))
 
 // ─── Categories ───────────────────────────────────────────────────────────────
 export const getCategories = async () => {

@@ -1,4 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import { mergeCatalogue, approvedProducts } from '../data/catalogue'
+import { useAuth } from './useAuth'
 import {
   subscribeProducts,
   subscribeCategories,
@@ -39,7 +41,8 @@ const DEFAULT_ABOUT = {
 const DEFAULT_THEME = { blue: '#0a3d8f', teal: '#00c2a8', navy: '#060f2e' }
 
 export function DataProvider({ children }) {
-  const [products, setProducts] = useState([])
+  const [products, setProducts] = useState(approvedProducts)
+  const { isAdmin } = useAuth()
   const [categories, setCategories] = useState([])
   const [orders, setOrders] = useState([])
   const [messages, setMessages] = useState([])
@@ -60,13 +63,17 @@ export function DataProvider({ children }) {
   // Subscribe to real-time collections
   useEffect(() => {
     const unsubs = [
-      subscribeProducts(setProducts),
+      subscribeProducts(rows => setProducts(mergeCatalogue(rows))),
       subscribeCategories(setCategories),
-      subscribeOrders(setOrders),
-      subscribeMessages(setMessages),
     ]
     return () => unsubs.forEach(u => u())
   }, [])
+
+  useEffect(() => {
+    if (!isAdmin) { setOrders([]); setMessages([]); return }
+    const unsubs = [subscribeOrders(setOrders), subscribeMessages(setMessages)]
+    return () => unsubs.forEach(u => u())
+  }, [isAdmin])
 
   // Load settings once
   useEffect(() => {
@@ -78,7 +85,7 @@ export function DataProvider({ children }) {
         if (th) setTheme(th)
         setSettingsLoaded(true)
       }
-    )
+    ).catch(() => setSettingsLoaded(true))
   }, [])
 
   const updateCompany = useCallback(async (data) => {

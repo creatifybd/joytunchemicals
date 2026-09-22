@@ -36,7 +36,7 @@ jobs:
         run: npm ci
 
       - name: Check Deployment Logic
-        run: node --test tests/deployment.test.js
+        run: node --test tests/*.test.js
 
       - name: Build Project
         run: npm run build
