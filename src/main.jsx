@@ -18,3 +18,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </BrowserRouter>
   </React.StrictMode>
 )
+
+import '@fontsource/metropolis/latin-400.css'
+import '@fontsource/metropolis/latin-500.css'
+import '@fontsource/metropolis/latin-600.css'
+import '@fontsource/metropolis/latin-700.css'
+import '@fontsource/birthstone/latin-400.css'

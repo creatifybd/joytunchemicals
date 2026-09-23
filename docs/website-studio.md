@@ -29,3 +29,14 @@ Search Console verification and submitting the sitemap require access to the com
 ## Release checks
 
 `npm test` verifies catalogue preservation, content merging, safe links, SEO routes and deployment integrity. PHP integration checks run when PHP is available (required in the GitHub Actions deployment gate). `npm run build` generates production assets and SEO defaults. GitHub `main` deploys to the existing Hostinger destination.
+
+## Reference-led visual update
+
+The corporate presentation follows the visual direction requested from Believe International: Metropolis geometric typography, restrained Birthstone script accents, full-width lifestyle photography, image-led story sections, generous spacing and soft asymmetric corners. The source reference was inspected on 2026-09-23; its pharmaceutical claims, facilities, imagery and copy were not reused.
+
+Two illustrative home-care photographs were created with the built-in image generation tool and integrated as optimized WebP assets:
+
+- `public/images/lifestyle/family-home.webp`: a Bangladeshi family at home, grouped on the right with open space on the left for the existing headline.
+- `public/images/lifestyle/hand-washing.webp`: close-up of two hands being washed with soap at a residential basin, natural light, neutral and olive palette.
+
+Both prompts specified realistic editorial photography, correct anatomy, no logos, no text, no products and no invented facility/employee depiction. The original 22 supplied product PNGs remain byte-for-byte unchanged. Administrators can change lifestyle image URLs and alt text in **Lifestyle imagery**. Font license notices are distributed under `/licenses/`.
