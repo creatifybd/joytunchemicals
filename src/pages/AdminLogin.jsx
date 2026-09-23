@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import '../admin.css'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../hooks/useAuth'
 import { ShieldCheck, AlertCircle } from 'lucide-react'
@@ -19,7 +20,7 @@ export default function AdminLogin() {
   )
 
   // Already logged in as admin → go to dashboard
-  if (user && isAdmin) { navigate('/admin'); return null }
+  if (user && isAdmin) return <Navigate to="/admin" replace />
 
   const handleLogin = async () => {
     setError(''); setLoading(true)
@@ -34,7 +35,7 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4"
+    <div className="admin-login min-h-screen flex items-center justify-center px-4"
       style={{ background: 'linear-gradient(160deg, #060f2e 0%, #0a2a5e 50%, #083d3a 100%)' }}>
       <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
         className="bg-white rounded-3xl p-10 w-full max-w-sm shadow-2xl text-center">
@@ -42,8 +43,8 @@ export default function AdminLogin() {
           style={{ background: 'linear-gradient(135deg, var(--color-primary), #0d52c2)' }}>
           <ShieldCheck size={32} className="text-white" />
         </div>
-        <h1 className="font-outfit text-2xl font-black text-dark mb-1">Admin Portal</h1>
-        <p className="text-gray-400 text-sm mb-8">JOYTUN Chemical Industries</p>
+        <h1 className="font-outfit text-2xl font-black text-dark mb-1">Website Studio</h1>
+        <p className="text-gray-400 text-sm mb-8">Joytun Chemical Industries OPC</p>
 
         {error && (
           <div className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 text-sm px-4 py-3 rounded-xl mb-6 text-left">

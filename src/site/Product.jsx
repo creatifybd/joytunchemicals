@@ -1,33 +1,41 @@
 import { useCallback, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowUpRight, ArrowRight, Check, Minus, Plus } from 'lucide-react'
+import { useData } from '../hooks/useData'
+import { productUrl, safeUrl } from '../data/site'
 import { getCategory } from '../data/catalogue'
 import Dialog from '../components/public/Dialog'
 import { addOrder } from '../lib/firestore'
 
 export function ProductCard({ product, onSelect }) {
-  const category = getCategory(product)
+  const {site}=useData()
+  const category = getCategory(product,site.categories)
   const picture = product.images?.[0] || product.img
   return <article className="product-card">
-    <Link to={`/products?product=${product.slug || product.id}`} onClick={onSelect ? e=>{e.preventDefault();onSelect(product)} : undefined} className="product-card-link" aria-label={`View ${product.name}, ${product.variant || ''}, ${product.format || ''}`}>
-      <div className="product-picture" style={{ '--product-tone': category.color }}><span className="product-category-label">{category.name}</span><img src={picture} alt={`${product.name} — ${product.variant || ''} ${product.format || ''}`} loading="lazy" decoding="async"/><span className="product-view">Discover product <ArrowUpRight size={18}/></span></div>
+    <Link to={productUrl(product)} onClick={onSelect ? e=>{e.preventDefault();onSelect(product)} : undefined} className="product-card-link" aria-label={`View ${product.name}, ${product.variant || ''}, ${product.format || ''}`}>
+      <div className="product-picture" style={{ '--product-tone': category.color }}><span className="product-category-label">{category.name}</span><img src={safeUrl(picture,'')} alt={`${product.name} — ${product.variant || ''} ${product.format || ''}`} loading="lazy" decoding="async"/><span className="product-view">Discover product <ArrowUpRight size={18}/></span></div>
       <div className="product-card-info"><span className="product-brand">{product.brand || product.name}</span><h3>{product.type || product.name}</h3><p>{product.variant}{product.variant && product.format && <span> · </span>}{product.format}</p><span className="product-card-arrow"><ArrowUpRight size={21}/></span></div>
     </Link>
   </article>
 }
 
-export function ProductDetails({ product, products, onClose, onSelect, onEnquire }) {
-  const category = getCategory(product)
+export function ProductDetails({ product, products, onClose, onSelect, onEnquire, standalone = false }) {
+  const {site}=useData()
+  const category = getCategory(product,site.categories)
   const siblings = products.filter(p=>p.brand===product.brand && p.type===product.type && p.status==='active')
+  const [pictureIndex,setPictureIndex]=useState(0)
+  const pictures=product.images?.length?product.images:[product.img]
   const [expanded, setExpanded] = useState(false)
-  return <Dialog onClose={onClose} titleId="product-title" className="product-dialog">
-    <div className="detail-picture" style={{ backgroundColor: category.color }}><span className="eyebrow">{category.name}</span><img src={product.images?.[0] || product.img} alt={`${product.name} ${product.variant} ${product.format}`}/></div>
-    <div className="detail-copy"><p className="eyebrow">THE JOYTUN COLLECTION</p><p className="detail-brand">{product.brand}</p><h2 id="product-title">{product.type || product.name}</h2><p className="detail-variant">{product.variant} <span>·</span> {product.format}</p><p className="detail-description">{product.desc}</p>
+  const Title=standalone?'h1':'h2'
+  const Wrapper=standalone?'section':Dialog
+  return <Wrapper {...(standalone?{className:'product-dialog standalone-product'}:{onClose,titleId:'product-title',className:'product-dialog'})}>
+    <div className="detail-picture" style={{ backgroundColor: category.color }}><span className="eyebrow">{category.name}</span><img src={safeUrl(pictures[pictureIndex],'')} alt={`${product.name} ${product.variant || ''} ${product.format || ''}`}/>{pictures.length>1&&<div className="detail-thumbnails">{pictures.map((src,i)=><button key={i} aria-label={`View product image ${i+1}`} aria-pressed={i===pictureIndex} onClick={()=>setPictureIndex(i)}><img src={safeUrl(src,'')} alt=""/></button>)}</div>}</div>
+    <div className="detail-copy"><p className="eyebrow">THE JOYTUN COLLECTION</p><p className="detail-brand">{product.brand}</p><Title id="product-title">{product.type || product.name}</Title><p className="detail-variant">{product.variant} <span>·</span> {product.format}</p><p className="detail-description">{product.desc}</p>{product.feats&&<ul className="product-features">{product.feats.split(/\n|,/).filter(Boolean).map(f=><li key={f}>{f}</li>)}</ul>}
       {siblings.length>1 && <div className="variant-picker"><h3>Find your favourite</h3><div>{siblings.map(p=><button className={p.id===product.id?'selected':''} key={p.id} onClick={()=>onSelect(p)} aria-pressed={p.id===product.id}>{p.variant}<small>{p.format}</small></button>)}</div></div>}
       <button className="care-button" onClick={()=>onEnquire(product)}>Enquire about this product <ArrowUpRight size={18}/></button><p className="enquiry-note">For product availability, orders and wholesale enquiries.</p>
-      <div className="care-accordion"><button onClick={()=>setExpanded(v=>!v)} aria-expanded={expanded}>Use & care {expanded?<Minus size={18}/>:<Plus size={18}/>}</button>{expanded&&<p>Follow the directions and precautions printed on the packaging. Keep cleaning products out of children’s reach. Do not mix cleaning products. Contact our team if you need more product information.</p>}</div>
+      <div className="care-accordion"><button onClick={()=>setExpanded(v=>!v)} aria-expanded={expanded}>Use & care {expanded?<Minus size={18}/>:<Plus size={18}/>}</button>{expanded&&<p>{product.usage || site.products.usage}</p>}</div>
     </div>
-  </Dialog>
+  </Wrapper>
 }
 
 export function ProductEnquiry({ product, onClose }) {

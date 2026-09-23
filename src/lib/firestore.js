@@ -11,6 +11,7 @@ import {
   query,
   orderBy,
   serverTimestamp,
+  runTransaction,
 } from 'firebase/firestore'
 import { db } from './firebase'
 
@@ -20,10 +21,10 @@ export const getProducts = async () => {
   return snap.docs.map(d => ({ id: d.id, ...d.data() }))
 }
 
-export const subscribeProducts = (cb) =>
+export const subscribeProducts = (cb, onError) =>
   onSnapshot(
     query(collection(db, 'products'), orderBy('createdAt', 'desc')),
-    (snap) => cb(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    (snap) => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))), onError
   )
 
 
@@ -110,3 +111,17 @@ export const addMessage = (data) =>
   addDoc(collection(db, 'messages'), { ...data, createdAt: serverTimestamp() })
 
 export const deleteMessage = (id) => deleteDoc(doc(db, 'messages', id))
+
+// Publish the public website atomically; revisions prevent overwriting another editor.
+export const subscribeWebsite = (cb, onError) => onSnapshot(doc(db, 'settings', 'company'), snap => cb(snap.data()?.website || {}), onError)
+export const publishWebsite = (website, expectedRevision = 0) => runTransaction(db, async transaction => {
+  const ref = doc(db, 'settings', 'company')
+  const snap = await transaction.get(ref)
+  const current = snap.data()?.website?.revision || 0
+  if (current !== expectedRevision) throw new Error('The website changed in another session. Reload the published version before publishing your changes.')
+  transaction.set(ref, { website: { ...website, revision: current + 1 }, updatedAt: serverTimestamp() }, { merge: true })
+})
+export const updateEnquiryStatus=(kind,id,status)=>{
+  if(!['orders','messages'].includes(kind)||!['new','in-progress','resolved'].includes(status))throw new Error('Invalid conversation status')
+  return updateDoc(doc(db,kind,id),{status,updatedAt:serverTimestamp()})
+}

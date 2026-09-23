@@ -1,11 +1,20 @@
 DirectoryIndex index.php index.html
+RewriteEngine On
+RewriteBase /
+RewriteRule ^sitemap\.xml$ index.php [L,QSA]
+RewriteRule ^index\.php$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.php [L,QSA]
 
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteBase /
-  RewriteRule ^index\.html$ - [L]
-  RewriteRule ^index\.php$ - [L]
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /index.html [L]
+<IfModule mod_headers.c>
+  <FilesMatch "\.(woff2|png|webp|jpg|jpeg|css|js)$">
+    Header set Cache-Control "public, max-age=604800"
+  </FilesMatch>
+  <FilesMatch "^(seo-defaults\.json|deployment\.json|index\.html)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css application/javascript application/json application/xml
 </IfModule>

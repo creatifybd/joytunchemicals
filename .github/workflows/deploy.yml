@@ -36,7 +36,9 @@ jobs:
         run: npm ci
 
       - name: Check Deployment Logic
-        run: node --test tests/*.test.js
+        run: |
+          php -l public/index.php
+          node --test tests/*.test.js
 
       - name: Build Project
         run: npm run build

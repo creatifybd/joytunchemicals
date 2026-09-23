@@ -42,8 +42,8 @@ const descriptions = {
   bathroom: 'A dedicated cleaner for your toilet-care routine, in an angled-neck bottle. Read and follow the safety and application instructions on the label. Never mix cleaning products.',
 };
 
-export const approvedProducts = entries.map(([slug, brand, type, variant, format, category]) => ({
-  id: `joytun-${slug}`, slug, brand, type, variant, format, category,
+export const approvedProducts = entries.map(([slug, brand, type, variant, format, category], index) => ({
+  id: `joytun-${slug}`, order: index, slug, brand, type, variant, format, category,
   name: `${brand} ${type}`, cat: careCategories.find(c => c.id === category).cat,
   img: `/images/products/${slug}.png`, images: [`/images/products/${slug}.png`],
   desc: descriptions[category], variants: `${variant} · ${format}`, feats: '', status: 'active',
@@ -59,20 +59,20 @@ export function mergeCatalogue(remote = []) {
   return [...merged, ...remote.filter(p => !knownIds.has(p.id) && !legacyIds.has(p.id))].filter(p => !isBabyProduct(p));
 }
 
-export function getCategory(product) {
-  return careCategories.find(c => c.cat === product.cat) || careCategories.find(c => c.id === product.category) || careCategories[0];
+export function getCategory(product, categories = careCategories) {
+  return categories.find(c => c.id === product.category) || categories.find(c => c.cat === product.cat) || { id: 'other', name: product.cat || 'Everyday care', color:'#eef0e8' };
 }
 
-export function filterCatalogue(products, category = 'all', query = '') {
+export function filterCatalogue(products, category = 'all', query = '', categories = careCategories) {
   const normalize = value => value.normalize('NFKD').toLowerCase().replace(/[’'‘-]/g, '').replace(/[^\p{L}\p{N}\s]/gu, ' ');
   const words = normalize(query).trim().split(/\s+/).filter(Boolean);
-  return products.filter(p => p.status === 'active' && !isBabyProduct(p) && (category === 'all' || getCategory(p).id === category) && words.every(word => normalize(`${p.name} ${p.brand || ''} ${p.variant || ''} ${p.format || ''} ${p.cat || ''} ${p.slug || ''}`).includes(word)));
+  return products.filter(p => p.status === 'active' && !isBabyProduct(p) && (category === 'all' || getCategory(p, categories).id === category) && words.every(word => normalize(`${p.name} ${p.brand || ''} ${p.variant || ''} ${p.format || ''} ${p.cat || ''} ${p.slug || ''}`).includes(word))).sort((a,b)=>(a.order??999)-(b.order??999));
 }
 
 export const companyDetails = {
   name: 'Joytun Chemical Industries OPC',
   email: 'info@joytunchemicals.com',
   phone: '+880 17999-96410',
-  office: 'AHN Tower, 9th Floor, 13, Biponon Commercial Area, Bir Uttam C.R. Dutta Road, Bangla Motor, Dhaka-1215, Bangladesh.',
+  office: 'Kanchpur, Sonargaon, Narayanganj, Bangladesh.',
   factory: 'Kanchpur, Sonargaon, Narayanganj, Bangladesh.',
 };

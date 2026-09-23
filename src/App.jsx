@@ -1,17 +1,15 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import PublicLayout from './site/Layout'
-import { HomePage, ProductsPage, AboutPage, ContactPage } from './site/Pages'
-import AdminLayout from './components/admin/AdminLayout'
-import AdminLogin from './pages/AdminLogin'
-import Dashboard from './pages/admin/Dashboard'
-import AdminProducts from './pages/admin/AdminProducts'
-import AdminCategories from './pages/admin/AdminCategories'
-import AdminOrders from './pages/admin/AdminOrders'
-import AdminMessages from './pages/admin/AdminMessages'
-import AdminCompany from './pages/admin/AdminCompany'
-import AdminTheme from './pages/admin/AdminTheme'
-import AdminAbout from './pages/admin/AdminAbout'
+import { HomePage, ProductsPage, ProductPage, NotFoundPage, AboutPage, ContactPage } from './site/Pages'
+const AdminLayout = lazy(() => import('./components/admin/AdminLayout'))
+const AdminLogin = lazy(() => import('./pages/AdminLogin'))
+const Dashboard = lazy(() => import('./pages/admin/Dashboard'))
+const AdminProducts = lazy(() => import('./pages/admin/AdminProducts'))
+const AdminInbox = lazy(() => import('./pages/admin/AdminInbox'))
+
+const AdminEditor = lazy(() => import('./pages/admin/AdminEditor'))
 
 function ProtectedRoute({ children }) {
   const { user, loading, isAdmin } = useAuth()
@@ -30,11 +28,13 @@ function ProtectedRoute({ children }) {
 
 export default function App() {
   return (
-    <Routes>
+    <Suspense fallback={<div className="app-loading" role="status">Loading Joytun…</div>}><Routes>
       {/* Public Routes */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/products" element={<ProductsPage />} />
+        <Route path="/products/:slug" element={<ProductPage />} />
+        <Route path="*" element={<NotFoundPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
       </Route>
@@ -51,15 +51,16 @@ export default function App() {
       >
         <Route index element={<Dashboard />} />
         <Route path="products" element={<AdminProducts />} />
-        <Route path="categories" element={<AdminCategories />} />
-        <Route path="orders" element={<AdminOrders />} />
-        <Route path="messages" element={<AdminMessages />} />
-        <Route path="company" element={<AdminCompany />} />
-        <Route path="theme" element={<AdminTheme />} />
-        <Route path="about" element={<AdminAbout />} />
+        <Route path="content" element={<AdminEditor />} />
+        <Route path="categories" element={<Navigate to="/admin/content?section=categories" replace />} />
+        <Route path="orders" element={<AdminInbox kind="orders" />} />
+        <Route path="messages" element={<AdminInbox kind="messages" />} />
+        <Route path="company" element={<Navigate to="/admin/content?section=brand" replace />} />
+        <Route path="theme" element={<Navigate to="/admin/content?section=appearance" replace />} />
+        <Route path="about" element={<Navigate to="/admin/content?section=about" replace />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+
+    </Routes></Suspense>
   )
 }

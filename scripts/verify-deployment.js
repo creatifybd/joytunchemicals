@@ -24,7 +24,13 @@ export async function verifyDeployment(siteUrl, distDir) {
   for (const route of ['', 'index.html', 'products', 'admin/login']) {
     const response = await get(route);
     assert.match(response.headers.get('content-type') || '', /text\/html/, `${route || '/'} is not HTML`);
-    assert.equal((await response.text()).trim(), expected, `${route || '/'} does not serve the current build`);
+    const html = (await response.text()).trim();
+    if (route === 'index.html') assert.equal(html, expected, 'Static entry does not match the current build');
+    else {
+      assert(html.includes(`joytun-release: ${release.releaseId}`), `${route || '/'} does not serve the current release`);
+      assert.match(html, /rel="canonical"/, 'Server-rendered canonical is missing');
+      assert(!html.includes('AHN Tower'), 'An obsolete address is still present');
+    }
     console.log(`Verified ${new URL(route, base).pathname}`);
   }
 

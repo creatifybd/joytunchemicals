@@ -48,7 +48,7 @@ async function fixture(t) {
   const directory = await mkdtemp(path.join(tmpdir(), 'joytun-deployment-'));
   t.after(() => rm(directory, { recursive: true, force: true }));
   await mkdir(path.join(directory, 'assets'));
-  const html = '<html><script src="/assets/app.js"></script><link href="/assets/app.css" rel="stylesheet"></html>';
+  const html = '<html><link rel="canonical" href="https://www.joytunchemicals.com/"><!-- joytun-release: release-1 --><script src="/assets/app.js"></script><link href="/assets/app.css" rel="stylesheet"></html>';
   const files = {
     'index.html': html,
     'index.php': '<?php include "index.html";',
@@ -114,7 +114,7 @@ test('live check accepts the current build and rejects 403, stale HTML, broken r
   t.after(() => { server.closeAllConnections(); return new Promise(resolve => server.close(resolve)); });
   const url = `http://127.0.0.1:${server.address().port}`;
   await verifyDeployment(url, directory);
-  for (const [failure, message] of [['403', /HTTP 403/], ['stale', /current build/], ['route', /HTTP 404/], ['asset', /differs from the build/]]) {
+  for (const [failure, message] of [['403', /HTTP 403/], ['stale', /current release/], ['route', /HTTP 404/], ['asset', /differs from the build/]]) {
     mode = failure;
     await assert.rejects(verifyDeployment(url, directory), message);
   }
