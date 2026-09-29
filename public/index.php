@@ -51,6 +51,13 @@ $origin=$defaults['origin'];$path=parse_url($_SERVER['REQUEST_URI']??'/',PHP_URL
 function esc($text){return htmlspecialchars((string)$text,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');}
 function safe_url($url,$fallback='/'){return is_string($url)&&preg_match('#^(?:/(?!/)|https://[^\s]+)#',$url)?$url:$fallback;}
 function absolute_url($url){global $origin;$url=safe_url($url);return strpos($url,'https://')===0?$url:$origin.$url;}
+// Upgrade only the five known original asset paths, preserving custom admin uploads.
+function transparent_product_image($url){
+ if(!is_string($url))return $url;
+ if(preg_match('#^(?:https://(?:www\.)?joytunchemicals\.com)?/images/products/(vix-lemon-bar|vix-orange-bar|mr-glasso-spray|mr-glasso-refill|t-flush-toilet-cleaner)\.png(?:\?.*)?$#',$url,$m))return '/images/products-transparent/'.$m[1].'.png';
+ return $url;
+}
+foreach($products as &$p){if(isset($p['img']))$p['img']=transparent_product_image($p['img']);if(isset($p['images']))$p['images']=array_map('transparent_product_image',$p['images']);}unset($p);
 function product_path($p){return '/products/'.rawurlencode($p['slug']??$p['id']);}
 $active=array_values(array_filter($products,function($p){return ($p['status']??'')==='active';}));
 if($path==='/sitemap.xml'){

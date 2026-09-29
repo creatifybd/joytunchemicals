@@ -42,10 +42,17 @@ const descriptions = {
   bathroom: 'A dedicated cleaner for your toilet-care routine, in an angled-neck bottle. Read and follow the safety and application instructions on the label. Never mix cleaning products.',
 };
 
+const cutoutSlugs = new Set(['vix-lemon-bar','vix-orange-bar','mr-glasso-spray','mr-glasso-refill','t-flush-toilet-cleaner']);
+export function transparentProductImage(url) {
+  if(typeof url!=='string')return url;
+  const match=url.match(/^(?:https:\/\/(?:www\.)?joytunchemicals\.com)?\/images\/products\/([^/?]+)\.png(?:\?.*)?$/);
+  return match&&cutoutSlugs.has(match[1])?`/images/products-transparent/${match[1]}.png`:url;
+}
+
 export const approvedProducts = entries.map(([slug, brand, type, variant, format, category], index) => ({
   id: `joytun-${slug}`, order: index, slug, brand, type, variant, format, category,
   name: `${brand} ${type}`, cat: careCategories.find(c => c.id === category).cat,
-  img: `/images/products/${slug}.png`, images: [`/images/products/${slug}.png`],
+  img: transparentProductImage(`/images/products/${slug}.png`), images: [transparentProductImage(`/images/products/${slug}.png`)],
   desc: descriptions[category], variants: `${variant} · ${format}`, feats: '', status: 'active',
 }));
 
@@ -56,7 +63,7 @@ export function mergeCatalogue(remote = []) {
   const byId = new Map(remote.map(p => [p.id, p]));
   const merged = approvedProducts.map(original => ({ ...original, ...byId.get(original.id) }));
   const knownIds = new Set(approvedProducts.map(p => p.id));
-  return [...merged, ...remote.filter(p => !knownIds.has(p.id) && !legacyIds.has(p.id))].filter(p => !isBabyProduct(p));
+  return [...merged, ...remote.filter(p => !knownIds.has(p.id) && !legacyIds.has(p.id))].filter(p => !isBabyProduct(p)).map(p=>({...p,img:transparentProductImage(p.img),images:p.images?.map(transparentProductImage)}));
 }
 
 export function getCategory(product, categories = careCategories) {

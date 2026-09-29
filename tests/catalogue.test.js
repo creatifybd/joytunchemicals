@@ -43,3 +43,12 @@ test('search works with apostrophe variants, fragrance plus format, and care fil
   assert.equal(filterCatalogue(approvedProducts,'all','baby').length,0);
   assert.equal(filterCatalogue(approvedProducts,'all','not-a-product').length,0);
 });
+
+test('known opaque images upgrade to cutouts while custom admin uploads remain unchanged',()=>{
+ const old='/images/products/mr-glasso-spray.png';
+ const merged=mergeCatalogue([{id:'joytun-mr-glasso-spray',img:old,images:[old]}]);
+ assert.equal(merged.find(p=>p.slug==='mr-glasso-spray').img,'/images/products-transparent/mr-glasso-spray.png');
+ const custom='https://i.ibb.co/example/custom.png';
+ const updated=mergeCatalogue([{id:'joytun-mr-glasso-spray',img:custom,images:[custom]}]);
+ assert.equal(updated.find(p=>p.slug==='mr-glasso-spray').img,custom);
+});

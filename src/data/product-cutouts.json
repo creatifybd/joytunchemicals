@@ -1,0 +1,42 @@
+[
+  {
+    "slug": "vix-orange-bar",
+    "originalSha256": "3aeca7129e46a463426ff1d38566712a1ea141eccb7e85aba1968da8387a471d",
+    "sha256": "f3c954b8d31ecf210cc8a4442dc95a75ed6fd0c2fb2779ba0fb10be2bf147783",
+    "rgbSha256": "7522d4444e6c0f048c3e7fdbd4fbfb77700ee2049a950c416a26fac4a39c86d2",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "slug": "vix-lemon-bar",
+    "originalSha256": "6d292af26e0c199a04e6fa7d7a62ecfdfcae03574f5f3c9df12d75cd4667b4a6",
+    "sha256": "7c7d96c8d7d20b829f5e5a6dc63d76025d0c2e2d41654e239a35cf70e92781b2",
+    "rgbSha256": "1153f523bc9058275404a21281a78c53cef162194d5f056028b57eba23ee72ab",
+    "width": 1254,
+    "height": 1254
+  },
+  {
+    "slug": "mr-glasso-spray",
+    "originalSha256": "e294049d7803660e2bea56c9095d3e01cff88b6d34432f71800c5225ff7869f6",
+    "sha256": "7a6066d845a35570b38d2813b1a8d335608d1bf6c5af658f4e5ef8c7e27ff31f",
+    "rgbSha256": "0da6966c7ac2289bbe037add74dd793b64833d801ae163e1648061ca3fa91d11",
+    "width": 1380,
+    "height": 1140
+  },
+  {
+    "slug": "mr-glasso-refill",
+    "originalSha256": "49d7d611926ea571869e8232961027f4fcadedbba90b6d73f2ff555c51ff9264",
+    "sha256": "b500ce2c8995680031631e617a6e8de674333dbff58a6738fa7496b0c234e714",
+    "rgbSha256": "6cb925f771ba3b84293f3bd2debedd45c99c8404031cf7dc9780f14afd056929",
+    "width": 1380,
+    "height": 1140
+  },
+  {
+    "slug": "t-flush-toilet-cleaner",
+    "originalSha256": "db94ab841b4fbc4d83c09c89f3cb45c3296e6019ac89c0761809ebc48f649581",
+    "sha256": "ff4f96a606adf6505ee234422b4505012fcd078dbbeebafcfdef2ed57ccc4fa6",
+    "rgbSha256": "a82ad5ed1169c52d6f2cdd2b9d6cb230426b509f61f0c73dd19ef14cb1da7b63",
+    "width": 1261,
+    "height": 1247
+  }
+]
