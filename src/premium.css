@@ -154,3 +154,7 @@
 @media(hover:none){.public-site .product-picture>img,.public-site .category-card>img,.public-site .collection-products>img{transform:none!important}}
 @media(prefers-reduced-motion:reduce){.product-rail{scroll-behavior:auto!important}.public-site .product-picture:before{transition:none;transform:none}.public-site .product-view{transform:none}}
 .public-site.motion-off .product-picture:before,.public-site.motion-off .product-view{transform:none}
+/* Continuous marquee uses two identical runs; only the first is keyboard-announced. */
+.public-site .product-marquee{scroll-snap-type:none;scroll-behavior:auto;scrollbar-width:none;position:relative}
+.public-site .product-marquee::-webkit-scrollbar{display:none}
+.public-site .product-rail-controls button[aria-pressed=true]{background:var(--ink);color:white}

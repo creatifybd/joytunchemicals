@@ -7,12 +7,12 @@ import { getCategory } from '../data/catalogue'
 import Dialog from '../components/public/Dialog'
 import { addOrder } from '../lib/firestore'
 
-export function ProductCard({ product, onSelect }) {
+export function ProductCard({ product, onSelect, presentationClone = false }) {
   const {site}=useData()
   const category = getCategory(product,site.categories)
   const picture = product.images?.[0] || product.img
-  return <article className="product-card">
-    <Link to={productUrl(product)} onClick={onSelect ? e=>{if(e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;e.preventDefault();onSelect(product)} : undefined} className="product-card-link" aria-label={`View ${product.name}, ${product.variant || ''}, ${product.format || ''}`}>
+  return <article className="product-card" aria-hidden={presentationClone || undefined}>
+    <Link tabIndex={presentationClone ? -1 : undefined} to={productUrl(product)} onClick={onSelect ? e=>{if(e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;e.preventDefault();onSelect(product)} : undefined} className="product-card-link" aria-label={`View ${product.name}, ${product.variant || ''}, ${product.format || ''}`}>
       <div className="product-picture" style={{ '--product-tone': category.color }}><span className="product-category-label">{category.name}</span><img src={safeUrl(picture,'')} alt={`${product.name} — ${product.variant || ''} ${product.format || ''}`} loading="lazy" decoding="async"/><span className="product-view">Discover product <ArrowUpRight size={18}/></span></div>
       <div className="product-card-info"><span className="product-brand">{product.brand || product.name}</span><h3>{product.type || product.name}</h3><p>{product.variant}{product.variant && product.format && <span> · </span>}{product.format}</p><span className="product-card-arrow"><ArrowUpRight size={21}/></span></div>
     </Link>

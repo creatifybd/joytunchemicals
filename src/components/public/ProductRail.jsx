@@ -1,34 +1,50 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowLeft, ArrowRight } from 'lucide-react'
+import { Pause, Play } from 'lucide-react'
+import { useReducedMotion } from 'framer-motion'
+import { useData } from '../../hooks/useData'
 import { ProductCard } from '../../site/Product'
 
-// Native scrolling keeps keyboard, touch and trackpad navigation available.
 export default function ProductRail({ products }) {
   const rail = useRef(null)
-  const [edges, setEdges] = useState({ start: true, end: false })
+  const hovering = useRef(false)
+  const touching = useRef(false)
+  const focused = useRef(false)
+  const [paused, setPaused] = useState(false)
+  const reduced = useReducedMotion()
+  const { site } = useData()
+  const animate = !reduced && site.appearance.motion && products.length > 1
   useEffect(() => {
+    if (!animate) return
     const element = rail.current
-    const update = () => setEdges({ start: element.scrollLeft < 2, end: element.scrollLeft + element.clientWidth >= element.scrollWidth - 2 })
-    const observer = new ResizeObserver(update)
-    observer.observe(element)
-    element.addEventListener('scroll', update, { passive: true })
-    update()
-    return () => { observer.disconnect(); element.removeEventListener('scroll', update) }
-  }, [products])
-  function move(direction) {
-    const element = rail.current
-    const card = element.firstElementChild
-    const distance = card ? card.getBoundingClientRect().width + parseFloat(getComputedStyle(element).columnGap || 0) : element.clientWidth
-    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches || element.closest('.motion-off')
-    element.scrollBy({ left: direction * distance, behavior: reduced ? 'instant' : 'smooth' })
-  }
-  return <div className="product-presentation">
-    <div className="product-rail-controls" aria-label="Product presentation controls">
-      <button className="icon-button" disabled={edges.start} onClick={() => move(-1)} aria-label="Previous products"><ArrowLeft size={20}/></button>
-      <button className="icon-button" disabled={edges.end} onClick={() => move(1)} aria-label="Next products"><ArrowRight size={20}/></button>
-    </div>
-    <div className="product-rail" ref={rail} role="region" aria-label="Featured products" tabIndex={0}>
+    let frame, previous = 0, position = element.scrollLeft, loopWidth = 0, visible = true
+    const measure = () => {
+      const first = element.children[0], copy = element.children[products.length]
+      loopWidth = copy && first ? copy.offsetLeft - first.offsetLeft : 0
+    }
+    const resize = new ResizeObserver(measure)
+    resize.observe(element)
+    const intersection = new IntersectionObserver(entries => { visible = entries[0].isIntersecting })
+    intersection.observe(element)
+    measure()
+    function tick(time) {
+      const elapsed = previous ? Math.min(time - previous, 64) : 0
+      previous = time
+      if (!paused && !hovering.current && !touching.current && !focused.current && !document.hidden && visible && loopWidth > 0) {
+        position = (position + elapsed * 0.035) % loopWidth
+        element.scrollLeft = position
+      } else position = element.scrollLeft
+      frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => { cancelAnimationFrame(frame); resize.disconnect(); intersection.disconnect() }
+  }, [animate, paused, products.length])
+  return <div className="product-presentation" onMouseEnter={() => { hovering.current = true }} onMouseLeave={() => { hovering.current = false }}>
+    {animate && <div className="product-rail-controls"><button className="icon-button" onClick={() => setPaused(value => !value)} aria-label={paused ? 'Play product presentation' : 'Pause product presentation'} aria-pressed={paused}>{paused ? <Play size={20}/> : <Pause size={20}/>}</button></div>}
+    <div className={`product-rail ${animate ? 'product-marquee' : ''}`} ref={rail} role="region" aria-label="All products" tabIndex={0}
+      onFocusCapture={() => { focused.current = true }} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) focused.current = false }}
+      onTouchStart={() => { touching.current = true }} onTouchEnd={() => { touching.current = false }} onTouchCancel={() => { touching.current = false }}>
       {products.map(product => <ProductCard key={product.id} product={product}/>)}
+      {animate && products.map(product => <ProductCard key={`loop-${product.id}`} product={product} presentationClone/>)}
     </div>
   </div>
 }
