@@ -34,3 +34,13 @@ test('search, draft previews and missing pages cannot be indexed',()=>{
  for(const [path,query]of [['/products','?q=lemon'],['/','?preview=1'],['/does-not-exist',''],['/products/unavailable',''],['/admin/login','']])assert.match(getSeo(defaultSite,approvedProducts,path,query).robots,/noindex/)
  assert.match(getSeo({...defaultSite,seo:{...defaultSite.seo,indexable:false}},approvedProducts,'/').robots,/noindex/)
 })
+
+test('story slideshow defaults survive existing saved sites and remain editable',()=>{
+ const existing=mergeSite({home:{storyTitle:'Existing title'}})
+ assert.equal(existing.storySlides.length,5)
+ assert.equal(existing.home.storyTitle,'Existing title')
+ assert.equal(mergeSite({storySlides:[]}).storySlides.length,0)
+ const custom={image:'/custom.jpg',alt:'Custom image',title:'Custom title',subtitle:'Custom subtitle'}
+ assert.deepEqual(mergeSite({storySlides:[custom]}).storySlides,[custom])
+ assert.match(validateSite({...defaultSite,storySlides:[{...custom,image:'javascript:alert(1)'}]}),/story slide/)
+})

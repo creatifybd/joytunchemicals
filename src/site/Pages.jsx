@@ -7,6 +7,7 @@ import { resolveProductImage, safeUrl, productUrl } from '../data/site'
 import { addMessage } from '../lib/firestore'
 import Reveal from '../components/public/Reveal'
 import ProductRail from '../components/public/ProductRail'
+import StoryCarousel from './StoryCarousel'
 import Hero, {EditorialTitle,CollectionShowcase} from './Hero'
 import { ActionLink, PartnerSection } from './Layout'
 import { ProductCard, ProductDetails, ProductEnquiry } from './Product'
@@ -29,7 +30,7 @@ export function HomePage(){
     </section>}
     {h.showFeatured&&<section className="featured-section section-space"><div className="shell"><Reveal className="section-heading"><div><p className="eyebrow">MEET YOUR EVERYDAY ESSENTIALS</p><EditorialTitle text={h.featuredTitle}/></div><Link className="text-link" to="/products">Explore the collection <ArrowUpRight size={19}/></Link></Reveal><ProductRail products={products.filter(product=>product.status==='active')}/><CollectionShowcase/></div></section>}
     {h.showRitual&&<section className="ritual-section shell section-space"><Reveal className="ritual-art"><span className="eyebrow">N’OLIVE HAND CARE</span><span className="ritual-word" aria-hidden="true">a moment<br/>for you.</span><div className="ritual-product-pair"><ManagedImage reference={h.ritualImages[0]} products={products} alt={products.find(p=>p.slug===h.ritualImages[0])?.name||'Featured care product'} loading="lazy"/><ManagedImage reference={h.ritualImages[1]} products={products} alt={products.find(p=>p.slug===h.ritualImages[1])?.name||'Featured care product'} loading="lazy"/></div><span className="art-footnote">PUMP. REFILL. REPEAT.</span></Reveal><Reveal className="ritual-copy"><p className="eyebrow">SMALL RITUALS. EVERYDAY JOY.</p><EditorialTitle text={h.ritualTitle}/><p>{h.ritualText}</p><p>{h.ritualDetail}</p><ActionLink to={h.ritualLink}>{h.ritualButton}</ActionLink></Reveal></section>}
-    {h.showStory&&<section className="corporate-story shell section-space">{site.media.showLifestyleImages&&<Reveal className="corporate-story-photo"><img src={safeUrl(site.media.storyImage)} alt={site.media.storyAlt} loading="lazy" width="1200" height="900"/></Reveal>}<Reveal className="corporate-story-copy"><p className="eyebrow">OUR STORY</p><EditorialTitle text={h.storyTitle}/><p>{h.storyText}</p><ActionLink to="/about">Get to know Joytun</ActionLink></Reveal></section>}
+    {h.showStory&&<StoryCarousel/>}
     <PartnerSection/>
   </>
   const keys=['hero','brands','categories','featured','ritual','story','partner']
