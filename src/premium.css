@@ -182,3 +182,8 @@
 .story-no-motion .story-carousel-frames img{transition:none}
 @media(max-width:900px){.public-site .story-carousel{grid-template-columns:1fr;gap:30px}.story-copy-stage{min-height:0}.story-carousel-frames{aspect-ratio:16/9}.public-site .story-carousel-copy h2{font-size:36px}}
 @media(max-width:600px){.story-carousel-controls{gap:6px;flex-wrap:wrap}.story-slide-dots button{width:24px}.story-slide-number{font-size:11px}.public-site .story-playback .icon-button{width:36px;min-width:36px}.story-carousel-frames{border-radius:18px 18px 40px 18px}.public-site .story-carousel-copy h2{font-size:32px}.story-slide-copy>p{font-size:16px;line-height:1.8}.story-copy-stage{min-height:310px}}
+
+/* Two balanced, independently browsable rows with opposite travel directions. */
+.product-marquee-rows{display:grid;gap:24px;min-width:0}
+.product-marquee-rows .product-presentation{min-width:0}
+@media(max-width:600px){.product-marquee-rows{gap:16px}}
