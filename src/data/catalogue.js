@@ -46,6 +46,7 @@ const cutoutSlugs = new Set(['vix-lemon-bar','vix-orange-bar','mr-glasso-spray',
 export function transparentProductImage(url) {
   if(typeof url!=='string')return url;
   const match=url.match(/^(?:https:\/\/(?:www\.)?joytunchemicals\.com)?\/images\/products\/([^/?]+)\.png(?:\?.*)?$/);
+  if(match?.[1]==='nolive-lavender-pump')return '/images/products-corrected/nolive-lavender-pump-v2.webp';
   return match&&cutoutSlugs.has(match[1])?`/images/products-transparent/${match[1]}.png`:url;
 }
 
