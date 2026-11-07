@@ -44,3 +44,19 @@ test('story slideshow defaults survive existing saved sites and remain editable'
  assert.deepEqual(mergeSite({storySlides:[custom]}).storySlides,[custom])
  assert.match(validateSite({...defaultSite,storySlides:[{...custom,image:'javascript:alert(1)'}]}),/story slide/)
 })
+
+test('existing homepage order gains videos without losing customised order',()=>{
+ const old=['hero','categories','story','featured','ritual','brands','partner']
+ const merged=mergeSite({home:{sectionOrder:old}})
+ assert.deepEqual(merged.home.sectionOrder,['hero','categories','story','featured','ritual','videos','brands','partner'])
+ assert.deepEqual(old,['hero','categories','story','featured','ritual','brands','partner'])
+ assert.equal(validateSite(merged),null)
+ assert.deepEqual(mergeSite(merged).home.sectionOrder,merged.home.sectionOrder)
+ assert.equal(merged.videos.items.length,4)
+ assert.equal(mergeSite({videos:{enabled:false,items:[]}}).videos.enabled,false)
+ assert.equal(mergeSite({videos:{items:[]}}).videos.items.length,0)
+})
+test('video settings reject malformed IDs and duplicate films',()=>{
+ for(const items of [[{videoId:'https://evil.test',title:'Test'}],[defaultSite.videos.items[0],defaultSite.videos.items[0]]])
+ assert.match(validateSite(mergeSite({videos:{items}})),/video/)
+})

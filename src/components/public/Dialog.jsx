@@ -13,7 +13,7 @@ export default function Dialog({ children, onClose, titleId, className = '' }) {
     function onKey(event) {
       if (event.key === 'Escape') { event.stopPropagation(); onCloseRef.current() }
       if (event.key !== 'Tab') return
-      const elements = [...dialog.current.querySelectorAll('button:not(:disabled), a[href], input, select, textarea, [tabindex="0"]')].filter(el => el.getClientRects().length)
+      const elements = [...dialog.current.querySelectorAll('button:not(:disabled), a[href], input, select, textarea, iframe, [tabindex="0"]')].filter(el => el.getClientRects().length)
       const first = elements[0], last = elements.at(-1)
       if (event.shiftKey && (document.activeElement === first || document.activeElement === dialog.current)) { event.preventDefault(); last?.focus() }
       else if (!event.shiftKey && (document.activeElement === last || document.activeElement === dialog.current)) { event.preventDefault(); first?.focus() }

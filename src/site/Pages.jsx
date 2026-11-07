@@ -7,6 +7,7 @@ import { resolveProductImage, safeUrl, productUrl } from '../data/site'
 import { addMessage } from '../lib/firestore'
 import Reveal from '../components/public/Reveal'
 import ProductRail from '../components/public/ProductRail'
+import VideoGallery from './VideoGallery'
 import StoryCarousel from './StoryCarousel'
 import Hero, {EditorialTitle,CollectionShowcase} from './Hero'
 import { ActionLink, PartnerSection } from './Layout'
@@ -32,8 +33,9 @@ export function HomePage(){
     {h.showRitual&&<section className="ritual-section shell section-space"><Reveal className="ritual-art"><span className="eyebrow">N’OLIVE HAND CARE</span><span className="ritual-word" aria-hidden="true">a moment<br/>for you.</span><div className="ritual-product-pair"><ManagedImage reference={h.ritualImages[0]} products={products} alt={products.find(p=>p.slug===h.ritualImages[0])?.name||'Featured care product'} loading="lazy"/><ManagedImage reference={h.ritualImages[1]} products={products} alt={products.find(p=>p.slug===h.ritualImages[1])?.name||'Featured care product'} loading="lazy"/></div><span className="art-footnote">PUMP. REFILL. REPEAT.</span></Reveal><Reveal className="ritual-copy"><p className="eyebrow">SMALL RITUALS. EVERYDAY JOY.</p><EditorialTitle text={h.ritualTitle}/><p>{h.ritualText}</p><p>{h.ritualDetail}</p><ActionLink to={h.ritualLink}>{h.ritualButton}</ActionLink></Reveal></section>}
     {h.showStory&&<StoryCarousel/>}
     <PartnerSection/>
+    <VideoGallery/>
   </>
-  const keys=['hero','brands','categories','featured','ritual','story','partner']
+  const keys=['hero','brands','categories','featured','ritual','story','partner','videos']
   return <>{h.sectionOrder.map(key=><div className="home-section" key={key}>{content.props.children[keys.indexOf(key)]}</div>)}</>
 }
 

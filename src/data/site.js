@@ -7,7 +7,13 @@ export const defaultSite = {
   media: {heroImage:'/images/lifestyle/family-home.webp',heroAlt:'A family sharing a relaxed moment at home',storyImage:'/images/lifestyle/hand-washing.webp',storyAlt:'Hands being washed with soap at a clean basin',aboutImage:'/images/lifestyle/family-home.webp',aboutAlt:'Family life at home',contactImage:'/images/lifestyle/hand-washing.webp',contactAlt:'Everyday hand care',showLifestyleImages:true},
   navigation: [{label:'Home',url:'/'},{label:'Our products',url:'/products'},{label:'Our story',url:'/about'},{label:'Contact',url:'/contact'}],
   appearance: { ink:'#24382e', green:'#637b43', lime:'#dce7bf', paper:'#ffffff', headingFont:'Metropolis', bodyFont:'Metropolis', motion:true, radius:12 },
-  home: { sectionOrder:['hero','story','categories','featured','ritual','brands','partner'], eyebrow:'HOME & PERSONAL CARE', title:'A little care.\nA better everyday.', accent:'', description:'From freshly washed hands to a home that feels like you. Discover everyday essentials from Joytun, made in Bangladesh.', button:'Explore our collection', buttonUrl:'/products', note:'YOUR HOME. YOUR PEOPLE. OUR CARE.', collectionsTitle:'For all the things\nyou call home.', collectionsText:'Fresh clothes. Clean dishes. Little hand-washing rituals. Find the right care for every part of your day.', featuredTitle:'Good care starts here.', featured:['nolive-apple-green-pump','vix-orange-bottle','aro-detergent','mr-glasso-spray'], ritualTitle:'Make room for\na little freshness.', ritualText:'A familiar fragrance. A freshly washed pair of hands. Sometimes, it’s the smallest moments that make the day feel better.', ritualDetail:'Meet n’Olive in Apple Green, Lavender, Ocean Blue and Gold Fresh. Find your favourite pump bottle and its matching refill.', ritualImages:['nolive-lavender-refill','nolive-lavender-pump'], ritualLink:'/products?category=hand', ritualButton:'Discover n’Olive', storyTitle:'From Bangladesh,\nwith care.', storyText:'We’re Joytun Chemical Industries OPC. Our home and personal care collection brings together the essentials that belong in everyday life, from the laundry room to the kitchen sink.', showBrands:true, showCategories:true, showFeatured:true, showRitual:true, showStory:true },
+  home: { sectionOrder:['hero','story','categories','featured','ritual','videos','brands','partner'], eyebrow:'HOME & PERSONAL CARE', title:'A little care.\nA better everyday.', accent:'', description:'From freshly washed hands to a home that feels like you. Discover everyday essentials from Joytun, made in Bangladesh.', button:'Explore our collection', buttonUrl:'/products', note:'YOUR HOME. YOUR PEOPLE. OUR CARE.', collectionsTitle:'For all the things\nyou call home.', collectionsText:'Fresh clothes. Clean dishes. Little hand-washing rituals. Find the right care for every part of your day.', featuredTitle:'Good care starts here.', featured:['nolive-apple-green-pump','vix-orange-bottle','aro-detergent','mr-glasso-spray'], ritualTitle:'Make room for\na little freshness.', ritualText:'A familiar fragrance. A freshly washed pair of hands. Sometimes, it’s the smallest moments that make the day feel better.', ritualDetail:'Meet n’Olive in Apple Green, Lavender, Ocean Blue and Gold Fresh. Find your favourite pump bottle and its matching refill.', ritualImages:['nolive-lavender-refill','nolive-lavender-pump'], ritualLink:'/products?category=hand', ritualButton:'Discover n’Olive', storyTitle:'From Bangladesh,\nwith care.', storyText:'We’re Joytun Chemical Industries OPC. Our home and personal care collection brings together the essentials that belong in everyday life, from the laundry room to the kitchen sink.', showBrands:true, showCategories:true, showFeatured:true, showRitual:true, showStory:true },
+  videos: { enabled:true, eyebrow:'JOYTUN IN MOTION', title:'Everyday care.\nBrought to life.', items:[
+    {videoId:'wigDoKBu8HQ',title:'Rio Detergent Powder',subtitle:'পরিচ্ছন্নতার নতুন অনুভূতি',duration:'0:54'},
+    {videoId:'Cil-bnmF22Y',title:'n’Olive Hand Wash',subtitle:'পরিচ্ছন্নতায় সতেজতার ছোঁয়া',duration:'1:03'},
+    {videoId:'h20f_8CTPX8',title:'VIX Dish Wash',subtitle:'বাসন পরিষ্কারে লেমন ও অরেঞ্জের সতেজতা',duration:'0:57'},
+    {videoId:'iCzY-s5GkfQ',title:'Joytun Baby Detergent Powder',subtitle:'শিশুর কাপড়ের কোমল যত্নে',duration:'1:02'}
+  ]},
   storySlides: [
     {image:'/images/story/hand-care.webp',alt:'Hands holding a soft lather in warm natural light',title:'Everyday care,\nfor every hand.',subtitle:'Explore n’Olive hand wash in four fragrances, with pump bottles and matching refill pouches for your daily routine.'},
     {image:'/images/story/aro-routine.webp',alt:'A woman adding Aro detergent to a laundry basin',title:'Aro, part of\nyour laundry routine.',subtitle:'From measuring the powder to washing your everyday clothes, Aro belongs in the familiar moments of laundry day. Follow the directions on the pack.'},
@@ -33,6 +39,13 @@ const plain=v=>v&&typeof v==='object'&&!Array.isArray(v)
 export function mergeSite(saved={}) {
   const merge=(base,value)=>Object.fromEntries(Object.entries(base).map(([k,v])=>[k,plain(v)?merge(v,plain(value?.[k])?value[k]:{}):value?.[k]??v]))
   const site=merge(defaultSite,saved)
+  // Preserve the order of existing seven-section sites while adding the film gallery.
+  if(Array.isArray(site.home.sectionOrder)&&!site.home.sectionOrder.includes('videos')){
+    const order=[...site.home.sectionOrder]
+    const anchor=order.indexOf('ritual')
+    order.splice(anchor<0?order.length:anchor+1,0,'videos')
+    site.home.sectionOrder=order
+  }
   // The company has one approved location. Never revive legacy office addresses.
   site.brand.location=LOCATION
   return site
@@ -50,7 +63,8 @@ export function resolveProductImage(value,products=[]) {
 }
 export function validateSite(site){
   if(!site.brand.name.trim()||!site.brand.email.includes('@'))return 'Enter a company name and valid email.'
-  if(site.home.sectionOrder.length!==7||new Set(site.home.sectionOrder).size!==7||site.home.sectionOrder.some(k=>!defaultSite.home.sectionOrder.includes(k)))return 'Keep each homepage section exactly once in the section order.'
+  if(site.home.sectionOrder.length!==defaultSite.home.sectionOrder.length||new Set(site.home.sectionOrder).size!==defaultSite.home.sectionOrder.length||site.home.sectionOrder.some(k=>!defaultSite.home.sectionOrder.includes(k)))return 'Keep each homepage section exactly once in the section order.'
+  if(!Array.isArray(site.videos?.items)||site.videos.items.some(v=>!v||!/^[-_a-zA-Z0-9]{11}$/.test(v.videoId)||!v.title?.trim())||new Set(site.videos.items.map(v=>v.videoId)).size!==site.videos.items.length)return 'Each video needs a unique 11-character YouTube video ID and a title.'
   if(!site.navigation.length)return 'Keep at least one navigation link.'
   const ids=site.categories.map(c=>c.id)
   if(ids.some(id=>!/^[-a-z0-9]+$/.test(id))||new Set(ids).size!==ids.length)return 'Category IDs must be unique lowercase letters, numbers or hyphens.'
