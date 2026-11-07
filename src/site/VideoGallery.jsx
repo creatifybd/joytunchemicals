@@ -15,7 +15,7 @@ export default function VideoGallery(){
     <div className="shell">
       <div className="section-heading"><div><p className="eyebrow">{videos.eyebrow}</p><EditorialTitle text={videos.title}/></div><a className="text-link" href="https://www.youtube.com/@JoytunChemicals" target="_blank" rel="noopener noreferrer">Visit our YouTube channel <ArrowUpRight size={19}/></a></div>
       <div className="films-grid">{items.map((video,i)=><button className="film-card" key={video.videoId} onClick={()=>setSelected(video)} aria-label={`Watch ${video.title}`} aria-haspopup="dialog">
-        <div className="film-poster"><img src={`https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg`} alt="" width="480" height="360" loading="lazy" decoding="async"/><span className="film-play"><Play size={24} fill="currentColor" aria-hidden="true"/></span><span className="film-watch">Watch film</span>{video.duration&&<span className="film-duration">{video.duration}</span>}</div>
+        <div className="film-poster"><img src={`https://i.ytimg.com/vi/${video.videoId}/maxresdefault.jpg`} onError={e=>{if(e.currentTarget.src.endsWith('/hqdefault.jpg'))return;e.currentTarget.src=`https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg`}} alt="" width="1280" height="720" loading="lazy" decoding="async"/><span className="film-play"><Play size={24} fill="currentColor" aria-hidden="true"/></span><span className="film-watch">Watch film</span>{video.duration&&<span className="film-duration">{video.duration}</span>}</div>
         <div className="film-caption"><span className="film-number">{String(i+1).padStart(2,'0')}</span><div><h3>{video.title}</h3><p lang="bn">{video.subtitle}</p></div><ArrowUpRight size={22} aria-hidden="true"/></div>
       </button>)}</div>
     </div>
