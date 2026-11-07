@@ -1,6 +1,8 @@
-import { lazy, Suspense } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { lazy, Suspense, useLayoutEffect } from 'react'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
+import BrandPage from './site/BrandPage'
+import Privacy from './site/Privacy'
 import PublicLayout from './site/Layout'
 import { HomePage, ProductsPage, ProductPage, NotFoundPage, AboutPage, ContactPage } from './site/Pages'
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout'))
@@ -9,6 +11,7 @@ const Dashboard = lazy(() => import('./pages/admin/Dashboard'))
 const AdminProducts = lazy(() => import('./pages/admin/AdminProducts'))
 const AdminInbox = lazy(() => import('./pages/admin/AdminInbox'))
 
+const Marketing = lazy(() => import('./pages/admin/Marketing'))
 const AdminEditor = lazy(() => import('./pages/admin/AdminEditor'))
 
 function ProtectedRoute({ children }) {
@@ -27,6 +30,8 @@ function ProtectedRoute({ children }) {
 }
 
 export default function App() {
+  const {pathname}=useLocation()
+  useLayoutEffect(()=>{if(pathname.startsWith('/admin')&&(document.getElementById('joytun-ga')||document.getElementById('joytun-gtm')||document.getElementById('joytun-clarity')))window.location.reload()},[pathname])
   return (
     <Suspense fallback={<div className="app-loading" role="status">Loading Joytun…</div>}><Routes>
       {/* Public Routes */}
@@ -35,6 +40,8 @@ export default function App() {
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:slug" element={<ProductPage />} />
         <Route path="*" element={<NotFoundPage />} />
+        <Route path="/brands/:slug" element={<BrandPage />} />
+        <Route path="/privacy" element={<Privacy />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
       </Route>
@@ -51,6 +58,7 @@ export default function App() {
       >
         <Route index element={<Dashboard />} />
         <Route path="products" element={<AdminProducts />} />
+        <Route path="marketing" element={<Marketing />} />
         <Route path="content" element={<AdminEditor />} />
         <Route path="categories" element={<Navigate to="/admin/content?section=categories" replace />} />
         <Route path="orders" element={<AdminInbox kind="orders" />} />

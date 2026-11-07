@@ -62,28 +62,33 @@ function product_path($p){return '/products/'.rawurlencode($p['slug']??$p['id'])
 $active=array_values(array_filter($products,function($p){return ($p['status']??'')==='active';}));
 if($path==='/sitemap.xml'){
  header('Content-Type: application/xml; charset=utf-8');echo '<?xml version="1.0" encoding="UTF-8"?>';echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
- if($site['seo']['indexable'])foreach(array_merge(['/','/products','/about','/contact'],array_map('product_path',$active)) as $p)echo '<url><loc>'.esc($origin.$p).'</loc></url>';
+ if($site['seo']['indexable'])foreach(array_merge(['/','/products','/about','/contact','/privacy'],array_map(function($b){return '/brands/'.$b['slug'];},$site['brandPages']??[]),array_map('product_path',$active)) as $p)echo '<url><loc>'.esc($origin.$p).'</loc></url>';
  echo '</urlset>';exit;
 }
 $slug=null;if(preg_match('#^/products/([^/]+)$#',$path,$match))$slug=rawurldecode($match[1]);
 if(!$slug&&isset($_GET['product']))$slug=$_GET['product'];
 $product=null;foreach($active as $p)if(($p['slug']??$p['id'])===$slug){$product=$p;break;}
+$brandPage=null;foreach($site['brandPages']??[] as $b)if($path==='/brands/'.$b['slug']){$brandPage=$b;break;}
+$privacy=$path==='/privacy';
 $admin=strpos($path,'/admin')===0;
 $known=in_array($path,['/','/products','/about','/contact','/index.php','/index.html'],true);
-$missing=!$known&&!$product&&!$admin;
+$missing=!$known&&!$product&&!$admin&&!$brandPage&&!$privacy;
 if($missing)http_response_code(404);
 $key=$path==='/about'?'about':($path==='/contact'?'contact':(strpos($path,'/products')===0?'products':'home'));
 $title=$site['seo'][$key]['title'];$description=$site['seo'][$key]['description'];
 if($product){$title=$product['seoTitle']??'';$title=$title?:$product['name'].' — '.($product['variant']??'Product').' | Joytun';$description=($product['seoDescription']??'')?:($product['desc']??$description);}
+if($brandPage){$title=$brandPage['title'].' in Bangladesh | Joytun';$description=$brandPage['description'];}
+if($privacy){$title='Privacy & Analytics | Joytun';$description='How Joytun handles enquiries and optional website analytics.';}
 if($admin)$title='Website Studio | Joytun';if($missing)$title='Page not found | Joytun';
-$canonical=$origin.($product?product_path($product):($known&&!in_array($path,['/index.php','/index.html'])?$path:'/'));
+$canonical=$origin.($brandPage||$privacy?$path:($product?product_path($product):($known&&!in_array($path,['/index.php','/index.html'])?$path:'/')));
 $image=absolute_url($product?($product['images'][0]??$product['img']??$site['seo']['image']):$site['seo']['image']);
 $robots=$admin?'noindex,nofollow':(($missing||isset($_GET['q'])||isset($_GET['search'])||isset($_GET['preview'])||!$site['seo']['indexable'])?'noindex,follow':'index,follow,max-image-preview:large');
 $organization=['@type'=>'Organization','@id'=>$origin.'/#organization','name'=>$site['brand']['name'],'url'=>$origin,'logo'=>absolute_url($site['brand']['logo']),'email'=>$site['brand']['email'],'telephone'=>$site['brand']['phone'],'address'=>['@type'=>'PostalAddress','streetAddress'=>$site['brand']['location'],'addressCountry'=>'BD']];
 $graph=[$organization,['@type'=>'WebSite','@id'=>$origin.'/#website','url'=>$origin,'name'=>$site['brand']['name'],'publisher'=>['@id'=>$origin.'/#organization']],['@type'=>'WebPage','@id'=>$canonical.'#page','url'=>$canonical,'name'=>$title,'description'=>$description,'isPartOf'=>['@id'=>$origin.'/#website']]];
-if($path!=='/'){$items=[['@type'=>'ListItem','position'=>1,'name'=>'Home','item'=>$origin.'/'],['@type'=>'ListItem','position'=>2,'name'=>$product?'Our products':ucfirst($key),'item'=>$product?$origin.'/products':$canonical]];if($product)$items[]=['@type'=>'ListItem','position'=>3,'name'=>$product['name'],'item'=>$canonical];$graph[]=['@type'=>'BreadcrumbList','itemListElement'=>$items];}
+if($path!=='/'){$items=[['@type'=>'ListItem','position'=>1,'name'=>'Home','item'=>$origin.'/'],['@type'=>'ListItem','position'=>2,'name'=>$product?'Our products':($brandPage?$brandPage['title']:($privacy?'Privacy':ucfirst($key))),'item'=>$product?$origin.'/products':$canonical]];if($product)$items[]=['@type'=>'ListItem','position'=>3,'name'=>$product['name'],'item'=>$canonical];$graph[]=['@type'=>'BreadcrumbList','itemListElement'=>$items];}
 if($product)$graph[]=['@type'=>'Product','@id'=>$canonical.'#product','name'=>$product['name'].' '.($product['variant']??''),'description'=>$description,'image'=>$image,'sku'=>$product['slug']??$product['id'],'brand'=>['@type'=>'Brand','name'=>$product['brand']??$site['brand']['shortName']],'manufacturer'=>['@id'=>$origin.'/#organization']];
 if($key==='products'&&!$product){$items=[];foreach($active as $i=>$p)$items[]=['@type'=>'ListItem','position'=>$i+1,'name'=>$p['name'],'url'=>$origin.product_path($p)];$graph[]=['@type'=>'ItemList','itemListElement'=>$items];}
+if($brandPage){$parts=[];foreach($active as $p)if(($p['brand']??'')===$brandPage['brand'])$parts[]=['@type'=>'WebPage','name'=>$p['name'],'url'=>$origin.product_path($p)];$graph[]=['@type'=>'CollectionPage','@id'=>$canonical.'#collection','name'=>$brandPage['title'],'url'=>$canonical,'description'=>$description,'about'=>['@type'=>'Brand','name'=>$brandPage['brand']],'hasPart'=>$parts];}
 $head='<title>'.esc($title).'</title><meta name="description" content="'.esc($description).'"><meta name="robots" content="'.esc($robots).'"><link rel="canonical" href="'.esc($canonical).'">';
 foreach(['og:title'=>$title,'og:description'=>$description,'og:url'=>$canonical,'og:image'=>$image,'og:type'=>'website','og:site_name'=>$site['brand']['name']] as $k=>$v)$head.='<meta property="'.esc($k).'" content="'.esc($v).'">';
 foreach(['twitter:card'=>'summary_large_image','twitter:title'=>$title,'twitter:description'=>$description,'twitter:image'=>$image] as $k=>$v)$head.='<meta name="'.esc($k).'" content="'.esc($v).'">';
@@ -95,10 +100,13 @@ $html=preg_replace('#<title>.*?</title>#s','',$html);
 $html=preg_replace('#<meta\s+(?:name="(?:description|robots|twitter:[^"]+)"|property="og:[^"]+")[^>]*>#i','',$html);
 $html=str_replace('</head>',$head.'</head>',$html);
 $body='<div class="public-site"><header class="shell" style="padding:24px"><a href="/">'.esc($site['brand']['name']).'</a><nav>';foreach($site['navigation'] as $n)$body.='<a style="margin-right:20px" href="'.esc(safe_url($n['url'])).'">'.esc($n['label']).'</a>';$body.='</nav></header><main class="shell section-space">';
-$heading=$product?($product['name'].' '.($product['variant']??'')):($admin?'Website studio':($missing?'Page not found':$site[$key==='products'?'products':$key]['title']));
+$heading=$brandPage?$brandPage['title']:($privacy?'Website privacy & analytics':($product?($product['name'].' '.($product['variant']??'')):($admin?'Website studio':($missing?'Page not found':$site[$key==='products'?'products':$key]['title']))));
 $body.='<h1>'.nl2br(esc($heading)).'</h1><p>'.esc($description).'</p>';
-if($product)$body.='<img style="width:280px;max-width:100%" src="'.esc($image).'" alt="'.esc($product['name']).'"><p>'.esc($product['desc']??'').'</p><a href="/contact">Enquire about this product</a>';
+if($brandPage){$body.='<h2 lang="bn">'.esc($brandPage['banglaTitle']).'</h2><p lang="bn">'.esc($brandPage['banglaText']).'</p><ul>';foreach($active as $p)if(($p['brand']??'')===$brandPage['brand'])$body.='<li><a href="'.esc(product_path($p)).'">'.esc($p['name'].' '.($p['variant']??'').' '.($p['format']??'')).'</a></li>';$body.='</ul><a href="/contact">Product and distribution enquiries</a>';}
+elseif($privacy)$body.='<p>Joytun uses submitted contact details to respond to enquiries. Optional analytics and masked interaction recordings are enabled only with permission. Use Analytics preferences to change your choice. YouTube processes video playback information under its own privacy policy.</p>';
+elseif($product)$body.='<img style="width:280px;max-width:100%" src="'.esc($image).'" alt="'.esc($product['name']).'"><p>'.esc($product['desc']??'').'</p><a href="/contact">Enquire about this product</a>';
 elseif(!$admin&&!$missing){$body.='<p>'.esc($site['brand']['location']).'</p>';if($key==='home'||$key==='products'){$body.='<ul>';foreach($active as $p)$body.='<li><a href="'.esc(product_path($p)).'">'.esc($p['name'].' '.($p['variant']??'').' '.($p['format']??'')).'</a></li>';$body.='</ul>';}if($key==='about')$body.='<p>'.esc($site['about']['lead']).'</p><p>'.esc($site['about']['paragraph1']).'</p><p>'.esc($site['about']['paragraph2']).'</p>';if($key==='contact')$body.='<a href="mailto:'.esc($site['brand']['email']).'">'.esc($site['brand']['email']).'</a><p>'.esc($site['brand']['phone']).'</p>';}
+if(!$admin&&!$missing){$body.='<nav aria-label="Our brands">';foreach($site['brandPages']??[] as $b)$body.='<a href="/brands/'.esc($b['slug']).'">'.esc($b['title']).'</a> ';$body.='</nav>';}
 $body.='</main></div>';
 $html=str_replace('<div id="root"></div>','<div id="root">'.$body.'</div>',$html);
 header('Content-Type: text/html; charset=utf-8');header('Cache-Control: no-cache');echo $html;
