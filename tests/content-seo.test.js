@@ -60,3 +60,19 @@ test('video settings reject malformed IDs and duplicate films',()=>{
  for(const items of [[{videoId:'https://evil.test',title:'Test'}],[defaultSite.videos.items[0],defaultSite.videos.items[0]]])
  assert.match(validateSite(mergeSite({videos:{items}})),/video/)
 })
+
+
+test('all active SKUs have distinct search identities and accurate image relationships',()=>{
+ const seen=new Set()
+ for(const p of approvedProducts){
+  const seo=getSeo(defaultSite,approvedProducts,`/products/${p.slug}`)
+  assert(!seen.has(seo.title),`Duplicate title: ${seo.title}`);seen.add(seo.title)
+  assert(seo.title.includes(p.format));assert(seo.description.includes(p.variant))
+  const item=seo.schema['@graph'].find(n=>n['@type']==='Product')
+  assert.equal(item.url,seo.url);assert.equal(item.mainEntityOfPage['@id'],seo.url+'#page')
+  assert(item.image.includes(seo.image));assert.equal(item.offers,undefined);assert.equal(item.aggregateRating,undefined)
+ }
+ const p={...approvedProducts[0],seoTitle:'Approved custom title',seoDescription:'Approved custom description'}
+ assert.equal(getSeo(defaultSite,[p],`/products/${p.slug}`).title,p.seoTitle)
+ assert.equal(getSeo(defaultSite,[p],`/products/${p.slug}`).description,p.seoDescription)
+})

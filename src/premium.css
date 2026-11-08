@@ -83,7 +83,7 @@
 .public-site .care-dialog{border-radius:24px;animation:premium-enter .3s var(--ease-out) both}
 .public-site .dialog-backdrop{backdrop-filter:blur(8px)}
 .public-site .dialog-close{background:white;box-shadow:0 3px 16px #24382e15;z-index:3}
-.public-site .variant-picker button{border-radius:12px;transition:border-color .2s,background .2s}
+.public-site .variant-picker :is(button,a){border-radius:12px;transition:border-color .2s,background .2s}
 .public-site .standalone-product{border:1px solid var(--line);border-radius:24px;overflow:hidden}
 .public-site .brand-family-grid>a{transition:background .3s;padding-block:28px}
 @keyframes premium-enter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}

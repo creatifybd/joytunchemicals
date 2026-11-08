@@ -1,6 +1,9 @@
 DirectoryIndex index.php index.html
 RewriteEngine On
 RewriteBase /
+# Consolidate the public brand domain; preserve paths and campaign query strings.
+RewriteCond %{HTTP_HOST} ^joytunchemicals\.com$ [NC]
+RewriteRule ^ https://www.joytunchemicals.com%{REQUEST_URI} [R=301,L,NE]
 RewriteRule ^sitemap\.xml$ index.php [L,QSA]
 RewriteRule ^index\.php$ - [L]
 RewriteCond %{REQUEST_FILENAME} !-f
