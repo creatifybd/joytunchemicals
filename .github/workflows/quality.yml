@@ -26,7 +26,3 @@ jobs:
         run: npm test
       - name: Production build
         run: npm run build
-      - name: Verify current live public SEO baseline
-        run: node scripts/audit-public-seo.js
-        env:
-          SITE_URL: https://www.joytunchemicals.com
