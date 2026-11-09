@@ -18,6 +18,14 @@ test('Hostinger renders crawlable pages, product metadata, safe JSON, sitemap an
  const sitemap=render('/sitemap.xml');assert.equal((sitemap.match(/<loc>/g)||[]).length,38);assert.equal((sitemap.match(/<image:image>/g)||[]).length,24);assert(sitemap.includes('/images/products-corrected/nolive-lavender-pump-v2.webp'));assert(sitemap.includes('xmlns:image='))
  const pump=render('/products/nolive-lavender-pump'),refill=render('/products/nolive-lavender-refill');assert(pump.includes('Lavender — Pump bottle'));assert(refill.includes('Lavender — Refill pouch'));assert(pump.includes('aria-label="Product variants"'));assert(pump.includes('/products/nolive-lavender-refill'));assert(pump.includes('Use &amp; care'))
  const guide=render('/care/dish-wash-bar');assert(guide.includes('Dish Wash Bar in Bangladesh'));assert(guide.includes('বাংলাদেশে ডিশ ওয়াশ বার'));assert(guide.includes('/products/vix-lemon-bar'));assert(guide.includes('CollectionPage'));assert(sitemap.includes('/care/hand-wash'));assert(sitemap.includes('/care/toilet-cleaner'));
+ const parseSchema=html=>{const match=html.match(/<script id="joytun-schema" type="application\\/ld\\+json">([^<]+)<\\/script>/);assert(match,'No JSON-LD');return JSON.parse(match[1])['@graph']}
+ const guideCrumbs=parseSchema(guide).find(n=>n['@type']==='BreadcrumbList').itemListElement
+ assert.deepEqual(guideCrumbs.map(n=>n.name),['Home','Our products','Dish Wash Bar'])
+ assert.deepEqual(guideCrumbs.map(n=>n.position),[1,2,3])
+ const productCrumbs=parseSchema(product).find(n=>n['@type']==='BreadcrumbList').itemListElement
+ assert.deepEqual(productCrumbs.map(n=>n.name),['Home','Our products','Aro Synthetic Detergent Powder — Fresh Green — Pouch'])
+ assert(product.includes('href="/care/detergent-powder"'),'Product page must cross-link to its care guide')
+ assert(pump.includes('href="/care/hand-wash"'))
  const brand=render('/brands/nolive');assert(brand.includes('n’Olive Hand Wash in Bangladesh'));assert(brand.includes('এন অলিভ'));assert(brand.includes('/products/nolive-lavender-pump'));assert(!brand.includes('Page not found'));assert(render('/privacy').includes('Privacy &amp; Analytics'));
  const missing=spawnSync('php',['-r',`$_SERVER['REQUEST_URI']='/missing';ob_start();include 'index.php';ob_end_clean();echo http_response_code();`],{cwd:dir,encoding:'utf8'});assert.equal(missing.stdout,'404')
  assert(render('/admin/login').includes('noindex,nofollow'))
