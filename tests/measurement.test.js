@@ -39,3 +39,17 @@ test('section exposure requires at least 10 percent visible for its one-second t
  assert.equal(meetsSectionExposure({isIntersecting:false,intersectionRatio:0.4},false),false)
  assert.equal(meetsSectionExposure(null,false),false)
 })
+
+test('tracking is not reported as queued before Google tag or GTM sender exists',()=>{
+ globalThis.window={location:{pathname:'/',href:'https://www.joytunchemicals.com/'},dispatchEvent(){}}
+ try{
+  setMeasurement(true,{mode:'direct',measurementId:'G-TEST123'})
+  assert.equal(track('view_item',{item_id:'rio-detergent'}),false)
+  globalThis.window.gtag=()=>{}
+  assert.equal(track('view_item',{item_id:'rio-detergent'}),true)
+  setMeasurement(true,{mode:'gtm'})
+  assert.equal(track('generate_lead',{form_id:'contact'}),false)
+  globalThis.window.dataLayer=[]
+  assert.equal(track('generate_lead',{form_id:'contact'}),true)
+ }finally{setMeasurement(false);delete globalThis.window}
+})
