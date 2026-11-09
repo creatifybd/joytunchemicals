@@ -1,4 +1,3 @@
-import assert from 'node:assert/strict'
 import {appendFileSync} from 'node:fs'
 import {fileURLToPath} from 'node:url'
 import path from 'node:path'
@@ -7,7 +6,7 @@ import {discoveryTopics} from '../src/data/searchLanding.js'
 import {defaultSite} from '../src/data/site.js'
 
 const origin=(process.env.SITE_URL||'https://www.joytunchemicals.com').replace(/\/+$/,'')
-const expectedPaths=[
+export const expectedPaths=[
   '/','/products','/about','/contact','/privacy',
   ...defaultSite.brandPages.map(b=>'/brands/'+b.slug),
   ...discoveryTopics.map(t=>'/care/'+t.slug),
