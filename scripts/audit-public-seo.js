@@ -52,6 +52,10 @@ export function inspectSitemap(xml) {
  const unexpected=urls.filter(url=>!expected.includes(url))
  return {urls,missing,unexpected}
 }
+// A missing image may be rewritten to a 200 HTML error page; check MIME type too.
+export const validProductImageResponse = response =>
+  response.ok && /^image\//i.test(response.headers?.get?.('content-type')||'')
+
 export async function auditPublicSeo(baseUrl=SITE_URL,{fetchImpl=fetch,concurrency=5}={}) {
  const base=new URL(baseUrl)
  const errors=[]
@@ -61,7 +65,10 @@ export async function auditPublicSeo(baseUrl=SITE_URL,{fetchImpl=fetch,concurren
    if(!response.ok)throw new Error('HTTP '+response.status+' '+path)
    return response.text()
  }
- const sitemap=inspectSitemap(await get('/sitemap.xml'))
+ const robots=await get('/robots.txt')
+ if(!robots.includes('Disallow: /admin'))errors.push('Robots policy no longer protects /admin from crawling')
+ if(!robots.includes('Sitemap: '+SITE_URL+'/sitemap.xml'))errors.push('Robots policy is missing canonical Sitemap URL')
+  const sitemap=inspectSitemap(await get('/sitemap.xml'))
  if(sitemap.missing.length||sitemap.unexpected.length) errors.push('Sitemap mismatch: missing='+sitemap.missing.join(',')+' extra='+sitemap.unexpected.join(','))
  const routes=[...expectedSeoRoutes]
  const workers=Array.from({length:Math.min(concurrency,routes.length)},async()=>{
@@ -74,7 +81,19 @@ export async function auditPublicSeo(baseUrl=SITE_URL,{fetchImpl=fetch,concurren
    }
  })
  await Promise.all(workers)
- return {ok:errors.length===0,routesChecked:expectedSeoRoutes.length,sitemapURLs:sitemap.urls.length,errors}
+ // Check the original approved assets without changing or re-encoding them.
+ const images=[...new Set(approvedProducts.map(p=>p.img).filter(Boolean))]
+ const queue=[...images]
+ await Promise.all(Array.from({length:Math.min(5,queue.length)},async()=>{
+   while(queue.length){
+     const img=queue.shift()
+     try {
+       const response=await fetchImpl(new URL(img,base),{method:'HEAD',headers:{'Cache-Control':'no-cache'},signal:AbortSignal.timeout(20000)})
+       if(!validProductImageResponse(response))errors.push('Missing or non-image asset: '+img+' (HTTP '+response.status+', type '+response.headers?.get?.('content-type')+')')
+     } catch(e){errors.push('Image asset fetch failed: '+img+' '+e.message)}
+   }
+ }))
+ return {ok:errors.length===0,routesChecked:expectedSeoRoutes.length,sitemapURLs:sitemap.urls.length,imagesChecked:images.length,errors}
 }
 if(process.argv[1]&&new URL('file://'+process.argv[1]).pathname===new URL(import.meta.url).pathname){
   const report=await auditPublicSeo(process.env.SITE_URL||SITE_URL)
