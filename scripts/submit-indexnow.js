@@ -28,7 +28,7 @@ async function shouldSubmit(){
  if(process.env.INDEXNOW_MODE!=='changed')throw new Error('INDEXNOW_MODE must be all or changed')
  const sha=process.env.DEPLOY_SHA
  if(!/^[0-9a-f]{40}$/i.test(sha||''))throw new Error('Expected deployed commit SHA')
- const response=await request('https://api.github.com/repos/creatifybd/joytunchemicals/commits/'+sha,{headers:{Accept:'application/vnd.github+json','User-Agent':'Joytun-IndexNow'}})
+ const response=await request('https://api.github.com/repos/creatifybd/joytunchemicals/commits/'+sha,{headers:{Accept:'application/vnd.github+json','User-Agent':'Joytun-IndexNow',...(process.env.GITHUB_TOKEN?{Authorization:'Bearer '+process.env.GITHUB_TOKEN}:{})}})
  if(!response.ok)throw new Error('Could not read deployed commit file list: HTTP '+response.status)
  const commit=await response.json()
  const files=(commit.files||[]).map(file=>file.filename)
