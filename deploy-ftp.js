@@ -1,4 +1,5 @@
 import { Client } from 'basic-ftp';
+import { setTimeout as delay } from 'node:timers/promises';
 import { readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -62,6 +63,32 @@ export async function uploadBuild(client, distDir, destination, releaseId) {
   // Existing files and previous hashed assets are kept for visitors with older pages.
 }
 
+// A dropped Hostinger FTP control connection can be transient. Reconnect only
+// before starting file publication; never retry bad credentials, wrong folders,
+// upload-size mismatches or partially completed releases automatically.
+export function retryableFtpHandshake(error) {
+ const code=String(error?.code||'')
+ const msg=String(error?.message||'')
+ return ['ECONNRESET','ECONNREFUSED','ETIMEDOUT','EPIPE','ENETUNREACH','EHOSTUNREACH'].includes(code)
+    || /FIN packet|connection (?:closed|lost)|timed? out|socket hang up/i.test(msg)
+    || /^(421|425)$/.test(code)
+}
+export async function connectFtpWithRetry(options,{clientFactory=()=>new Client(60_000),pause=delay,attempts=3}={}) {
+ let lastError
+ for(let attempt=1;attempt<=attempts;attempt++){
+   const client=clientFactory()
+   try { await client.access(options); return client }
+   catch(error){
+     client.close()
+     lastError=error
+     if(!retryableFtpHandshake(error)||attempt===attempts)throw error
+     console.warn(`FTP handshake interrupted (attempt ${attempt}/${attempts}); retrying with a fresh connection.`)
+     await pause(attempt*5000)
+   }
+ }
+ throw lastError
+}
+
 export async function deploy(env = process.env) {
   for (const name of ['FTP_SERVER', 'FTP_USERNAME', 'FTP_PASSWORD']) {
     if (!env[name]) throw new Error(`Missing GitHub Actions secret: ${name}`);
@@ -77,15 +104,14 @@ export async function deploy(env = process.env) {
   await writeFile(htmlFile, `${html.trimEnd()}\n<!-- joytun-release: ${releaseId} -->\n`);
   await writeFile(path.join(distDir, 'deployment.json'), JSON.stringify({ sha, releaseId, deployedAt: new Date().toISOString() }) + '\n');
 
-  const client = new Client(60_000);
+  const client = await connectFtpWithRetry({
+    host: env.FTP_SERVER,
+    user: env.FTP_USERNAME,
+    password: env.FTP_PASSWORD,
+    // Keep the existing account's FTP setting; FTPS can be enabled in repository variables.
+    secure: env.FTP_SECURE === 'true',
+  });
   try {
-    await client.access({
-      host: env.FTP_SERVER,
-      user: env.FTP_USERNAME,
-      password: env.FTP_PASSWORD,
-      // Keep the existing account's FTP setting; FTPS can be enabled in repository variables.
-      secure: env.FTP_SECURE === 'true',
-    });
     const destination = await selectDirectory(client, env.FTP_SERVER_DIR);
     console.log(`Hostinger destination: ${destination}`);
     await uploadBuild(client, distDir, destination, releaseId);
