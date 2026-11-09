@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {inspectSeoHtml,inspectSitemap,expectedSeoRoutes,auditPublicSeo} from '../scripts/audit-public-seo.js'
+import {inspectSeoHtml,inspectSitemap,expectedSeoRoutes,auditPublicSeo,validProductImageResponse} from '../scripts/audit-public-seo.js'
 import {defaultSite,SITE_URL} from '../src/data/site.js'
 import {approvedProducts} from '../src/data/catalogue.js'
 import {discoveryTopics} from '../src/data/searchLanding.js'
@@ -46,4 +46,12 @@ test('public health check reports broken canonical without inventing a pass',asy
  assert.equal(result.routesChecked,38)
  assert.equal(result.sitemapURLs,38)
  assert(result.errors.some(err=>err.includes('Incorrect canonical')))
+})
+
+test('product images must return actual images, not HTML fallback with HTTP 200',()=>{
+ const response=(status,contentType)=>({ok:status===200,status,headers:{get:()=>contentType}})
+ assert.equal(validProductImageResponse(response(200,'image/png')),true)
+ assert.equal(validProductImageResponse(response(200,'image/webp')),true)
+ assert.equal(validProductImageResponse(response(200,'text/html; charset=utf-8')),false)
+ assert.equal(validProductImageResponse(response(404,'image/png')),false)
 })
