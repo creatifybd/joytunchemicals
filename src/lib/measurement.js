@@ -33,8 +33,14 @@ export function track(name,params={}){
  const clean=sanitizeEvent(name,params)
  if(!active||!clean||typeof window==='undefined')return false
  const fields={...clean,page_path:window.location.pathname,page_location:cleanLocation(window.location.href)}
- if(mode==='gtm')window.dataLayer?.push({...Object.fromEntries([...new Set(Object.values(eventFields).flat())].map(k=>[k,null])),event:name,...fields})
- else window.gtag?.('event',name,{...fields,send_to:id})
+ if(mode==='gtm'){
+  if(!window.dataLayer||typeof window.dataLayer.push!=='function')return false
+  window.dataLayer.push({...Object.fromEntries([...new Set(Object.values(eventFields).flat())].map(k=>[k,null])),event:name,...fields})
+ }else{
+  if(typeof window.gtag!=='function'||!id)return false
+  window.gtag('event',name,{...fields,send_to:id})
+ }
+ // true means submitted to the local tag queue, not provider delivery confirmed.
  return true
 }
 export const productMeasurement=p=>({item_id:p.slug||p.id,item_brand:p.brand||'',item_category:p.category||p.cat||''})
