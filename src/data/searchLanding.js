@@ -89,3 +89,7 @@ export const discoveryTopics = [
 export const discoveryPath = topic => `/care/${topic.slug}`
 export const getDiscoveryTopic = slug => discoveryTopics.find(topic => topic.slug === slug)
 export const getDiscoveryProducts = (topic, products = []) => topic ? products.filter(p => p.status === 'active' && (topic.type ? p.type === topic.type : p.category === topic.category)) : []
+
+// Connect each approved SKU back to its most relevant, factual discovery guide.
+// This is a product-family relationship, not a claim of being "best" in the market.
+export const getProductDiscoveryTopic = product => product ? discoveryTopics.find(topic => topic.type ? topic.type === product.type : topic.category === product.category) : undefined
