@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {defaultSite,mergeSite,LOCATION,validateSite,safeUrl,resolveProductImage} from '../src/data/site.js'
 import {approvedProducts,filterCatalogue} from '../src/data/catalogue.js'
 import {getSeo} from '../src/data/seo.js'
+import {discoveryTopics,getDiscoveryProducts} from '../src/data/searchLanding.js'
 test('old office content cannot replace the single approved location',()=>{
  const site=mergeSite({brand:{location:'AHN Tower',name:'Updated company'},home:{title:'A new title'}})
  assert.equal(site.brand.location,LOCATION);assert.equal(site.brand.name,'Updated company');assert.equal(site.home.title,'A new title');assert.equal(site.home.description,defaultSite.home.description)
@@ -75,4 +76,19 @@ test('all active SKUs have distinct search identities and accurate image relatio
  const p={...approvedProducts[0],seoTitle:'Approved custom title',seoDescription:'Approved custom description'}
  assert.equal(getSeo(defaultSite,[p],`/products/${p.slug}`).title,p.seoTitle)
  assert.equal(getSeo(defaultSite,[p],`/products/${p.slug}`).description,p.seoDescription)
+})
+
+test('seven distinct, relevant search discovery topics use only catalogue products',()=>{
+ assert.equal(discoveryTopics.length,7)
+ assert.equal(new Set(discoveryTopics.map(t=>t.slug)).size,7)
+ for(const topic of discoveryTopics){
+   const items=getDiscoveryProducts(topic,approvedProducts)
+   assert(items.length,topic.slug+' has no products')
+   const seo=getSeo(defaultSite,approvedProducts,'/care/'+topic.slug)
+   assert.equal(seo.url,'https://www.joytunchemicals.com/care/'+topic.slug)
+   assert.match(seo.robots,/index,follow/)
+   assert.equal(seo.schema['@graph'].find(x=>x['@type']==='CollectionPage')?.hasPart?.length,items.length)
+   assert(!seo.title.toLowerCase().includes('best '),'Do not make unverified superiority claims')
+ }
+ assert.match(getSeo(defaultSite,approvedProducts,'/care/not-real').robots,/noindex/)
 })
