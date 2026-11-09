@@ -11,7 +11,7 @@ const keyFile='4d7c1ece067c8c62437433bb57e31e8a.txt'
 export const affectsIndexableContent = files => (Array.isArray(files)?files:[]).some(name=>
   /^src\/data\/(site|catalogue|searchLanding|seo)\.js$/.test(name) ||
   /^src\/site\/(Pages|Product|DiscoveryPage|BrandPage|SEO|Layout)\.jsx$/.test(name) ||
-  name==='public/index.php' || name.startsWith('public/images/')
+  name==='public/index.php' || name==='public/robots.txt' || name==='public/4d7c1ece067c8c62437433bb57e31e8a.txt' || name.startsWith('public/images/')
 )
 export function indexNowPayload({urls,key}){
  if(!/^[a-zA-Z0-9-]{8,128}$/.test(key))throw new Error('Invalid IndexNow key')
