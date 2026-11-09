@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {sanitizeEvent,cleanLocation,trackingAllowed,setMeasurement,track} from '../src/lib/measurement.js'
+import {sanitizeEvent,cleanLocation,trackingAllowed,setMeasurement,track,meetsSectionExposure} from '../src/lib/measurement.js'
 import {defaultSite,mergeSite,validateSite} from '../src/data/site.js'
 import {getSeo} from '../src/data/seo.js'
 import {approvedProducts} from '../src/data/catalogue.js'
@@ -30,4 +30,12 @@ test('delivery uses one destination and strips PII',()=>{
 test('brand pages have indexable canonical metadata and real product links',()=>{
  for(const slug of ['nolive','rio']){const seo=getSeo(defaultSite,approvedProducts,`/brands/${slug}`);assert.equal(seo.missing,false);assert.equal(seo.url,`https://www.joytunchemicals.com/brands/${slug}`);assert.match(seo.robots,/^index/);assert(seo.schema['@graph'].find(v=>v['@type']==='CollectionPage').hasPart.length>0)}
  assert.equal(getSeo(defaultSite,approvedProducts,'/brands/missing').missing,true)
+})
+
+test('section exposure requires at least 10 percent visible for its one-second timer',()=>{
+ assert.equal(meetsSectionExposure({isIntersecting:true,intersectionRatio:0.099},false),false)
+ assert.equal(meetsSectionExposure({isIntersecting:true,intersectionRatio:0.1},false),true)
+ assert.equal(meetsSectionExposure({isIntersecting:true,intersectionRatio:1},true),false)
+ assert.equal(meetsSectionExposure({isIntersecting:false,intersectionRatio:0.4},false),false)
+ assert.equal(meetsSectionExposure(null,false),false)
 })

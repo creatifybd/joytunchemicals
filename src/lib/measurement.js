@@ -18,6 +18,11 @@ export function cleanLocation(href){
  for(const key of allowed){const value=u.searchParams.get(key);if(value&&/^[a-zA-Z0-9_.-]{1,100}$/.test(value))result.searchParams.set(key,value)}
  return result.href
 }
+// An IntersectionObserver can report isIntersecting for a tiny sliver (<10%).
+// Require the documented 10% exposure threshold before starting the 1-second timer.
+export function meetsSectionExposure(entry,documentHidden=false){
+ return !!entry?.isIntersecting&&Number(entry.intersectionRatio)>=0.1&&!documentHidden
+}
 export function trackingAllowed({enabled,consent,pathname,search='',isAdmin=false,internal=false}){
  return !!enabled&&consent==='accepted'&&!isAdmin&&!internal&&!pathname.startsWith('/admin')&&!new URLSearchParams(search).has('preview')
 }

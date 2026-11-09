@@ -61,3 +61,7 @@ The site's new /privacy text describes actual instrumentation, not a legal certi
 - Only 2 GA4-sourced copies were observed during audit. Avoid adding another duplicate source until the existing sources are inspected/reconciled; never delete a source that charts depend on.
 - Unresolved: reliable GA4 users/sessions/engaged sessions/Views scorecards, working global date control, dashboard layout QA, GA4 DebugView single pageview per navigation, verified lead events and Clarity consent/masking checks.
 - Read-only verified identifiers can be shown in authenticated admin. Never expose OAuth access tokens, service-account JSON, credentials or private provider data in public Firestore or client bundles.
+
+## Section exposure accuracy (code QA)
+- Require IntersectionObserver intersectionRatio >= 0.1 **and** isIntersecting and visible document tab before beginning the existing one-second section_view timer. The older observer could count any intersecting sliver even when less than 10% was on screen.
+- These are visibility exposures, not evidence the user read the section. Check in a browser at common desktop/mobile viewport sizes and confirm hidden tabs never trigger. Do not treat raw event counts as unique visitors or conversions.

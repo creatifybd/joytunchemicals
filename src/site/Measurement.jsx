@@ -2,7 +2,7 @@ import {useEffect,useRef,useState} from 'react'
 import {Link,useLocation} from 'react-router-dom'
 import {useData} from '../hooks/useData'
 import {useAuth} from '../hooks/useAuth'
-import {cleanLocation,setMeasurement,track,trackingAllowed} from '../lib/measurement'
+import {cleanLocation,setMeasurement,track,trackingAllowed,meetsSectionExposure} from '../lib/measurement'
 const key='joytun-analytics-consent-v1'
 const read=()=>{try{return localStorage.getItem(key)||''}catch{return ''}}
 function inject(id,src){if(document.getElementById(id))return;const s=document.createElement('script');s.id=id;s.src=src;s.async=true;document.head.append(s)}
@@ -47,8 +47,8 @@ export default function Measurement(){
   const fired=new Set(),timers=new Map()
   const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{
    const el=entry.target,name=el.dataset.section
-   if(entry.isIntersecting&&!document.hidden&&!fired.has(name)&&!timers.has(el))timers.set(el,setTimeout(()=>{if(!document.hidden){track('section_view',{section_id:name});fired.add(name)}timers.delete(el)},1000))
-   else if(!entry.isIntersecting){clearTimeout(timers.get(el));timers.delete(el)}
+   if(meetsSectionExposure(entry,document.hidden)&&!fired.has(name)&&!timers.has(el))timers.set(el,setTimeout(()=>{if(!document.hidden){track('section_view',{section_id:name});fired.add(name)}timers.delete(el)},1000))
+   else if(!meetsSectionExposure(entry,document.hidden)){clearTimeout(timers.get(el));timers.delete(el)}
   }),{threshold:0.1})
   document.querySelectorAll('[data-section]').forEach(el=>observer.observe(el))
   const visibility=()=>{if(document.hidden){timers.forEach(clearTimeout);timers.clear()}}
