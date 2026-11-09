@@ -1,11 +1,12 @@
 # Joytun marketing measurement — launch handover
 
-Status: website instrumentation and SEO foundation implemented. Provider accounts, property ownership, event receipt, Search Console verification and live reporting dashboard still require authenticated setup. No paid service or ad spend is enabled. Default collection is OFF.
+Status (9 November 2026): website instrumentation and SEO foundation implemented; GA4 web stream and live data confirmed in Google Analytics Admin; Search Console source is connected to the existing Looker Studio report. Dashboard and event QA are still incomplete. No paid service or ad spend has been enabled by this project. Default collection in source code is OFF; Firestore site settings may override it.
 
 ## Account setup (company ownership)
 - GA4 standard property: Bangladesh reporting timezone, BDT currency. Confirm an existing property before creating one. Web stream: https://www.joytunchemicals.com.
 - Choose direct GA4 or GTM delivery in Website Studio > Analytics settings; never both. Do not add another Firebase Analytics initialisation.
-- For controlled measurement turn OFF enhanced automatic page views/history changes, forms, outbound clicks, search and video events in the GA4 stream. The code supplies explicit events. Set retention to 14 months if appropriate; document it in the approved privacy notice.
+- Verified GA4 property: **joytun-chemicals** (533958329), Web stream **Joytun-web** (14408990486), Measurement ID **G-03P79M8JDL**. Confirm the production Website Studio setting matches. These IDs are public identifiers, not credentials.
+- For controlled SPA measurement, `gtag('config', ..., {send_page_view:false})` is already in the website code to suppress automatic config pageviews. **Also disable the optional 'Page changes based on browser history events' Enhanced Measurement setting** in the GA4 web stream after DebugView validation; it can otherwise send duplicate pageviews on React Router transitions. Google does not allow removing the `page_view` Enhanced Measurement option entirely. Disable overlapping enhanced automatic forms/search/video/outbound event options only after checking the explicit event dictionary, privacy policy and actual delivery. Set retention to 14 months if approved and document it.
 - GTM option: Google tag with send_page_view=false, advertising signals disabled; custom event trigger restricted to event names below, GA4 event name {{Event}} with corresponding Data Layer Variables. Do not attach an All Clicks trigger or a second history/pageview trigger. Publish only after Preview validation.
 - Mark generate_lead as a key event. It fires only after Firestore confirms enquiry creation. This is an enquiry, not a sale, completed phone call or qualified lead.
 - Register event-scoped custom dimensions section_id, item_id, item_brand, item_category, form_id, contact_method and video_id as needed (avoid registering redundant built-in dimensions).
@@ -51,3 +52,12 @@ Lowercase ascii labels, underscores, consistent source/medium. Example: source=f
 
 ## Privacy and rollout
 The site's new /privacy text describes actual instrumentation, not a legal certification. Company should confirm contact and enquiry retention practices. No new data warehouse, server-side paid hosting, BigQuery billing, paid analytics plan, paid connector or paid ads are required by this implementation.
+
+## Authenticated provider audit — 9 November 2026
+- Signed-in GA4 web stream Joytun-web is receiving events; GA4 7-day home showed 2 users, 2 sessions and 6 views. This small sample is not a full visitor census and cannot justify growth claims.
+- Looker Studio report: https://lookerstudio.google.com/reporting/6834aed1-7c9a-4f89-a948-9c5d0365b6be
+- Native free Search Console site-impression data source for https://www.joytunchemicals.com/ is added to the report. A second report page, 'Google Search Performance', has a Search Queries table configured with Query, Clicks, Impressions, Site CTR, Average Position; Clicks descending; last 28 complete days. Verify all columns actually render and apply the final visual QA.
+- Existing Google Analytics native connector selected property 533958329 but the Looker Studio edit UI did not expose all desired session/user/date fields during automation. **Do not assert that the GA4 property lacks web traffic or that the connector is app-stream-only**: the GA4 connector selects a property, not a particular stream. Check data-source field refresh, supported Data API fields, provider permission and report metric selection before recreating it.
+- Only 2 GA4-sourced copies were observed during audit. Avoid adding another duplicate source until the existing sources are inspected/reconciled; never delete a source that charts depend on.
+- Unresolved: reliable GA4 users/sessions/engaged sessions/Views scorecards, working global date control, dashboard layout QA, GA4 DebugView single pageview per navigation, verified lead events and Clarity consent/masking checks.
+- Read-only verified identifiers can be shown in authenticated admin. Never expose OAuth access tokens, service-account JSON, credentials or private provider data in public Firestore or client bundles.
