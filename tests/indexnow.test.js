@@ -7,6 +7,7 @@ test('only meaningful published content changes notify IndexNow, not analytics/b
  assert.equal(affectsIndexableContent(['src/data/catalogue.js']),true)
  assert.equal(affectsIndexableContent(['src/data/searchLanding.js']),true)
  assert.equal(affectsIndexableContent(['public/index.php']),true)
+ assert.equal(affectsIndexableContent(['public/robots.txt']),true)
  assert.equal(affectsIndexableContent(['src/site/Product.jsx']),true)
  assert.equal(affectsIndexableContent(['public/images/products/rio-detergent.png']),true)
 })
