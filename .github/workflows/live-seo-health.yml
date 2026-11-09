@@ -1,0 +1,33 @@
+name: Live Website SEO Health
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_run:
+    workflows:
+      - Deploy to Hostinger
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+concurrency:
+  group: joytun-live-seo-health
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Inspect public URLs, robots, sitemap, schema and product images
+        run: node scripts/monitor-live-seo.js
+        env:
+          SITE_URL: https://www.joytunchemicals.com
