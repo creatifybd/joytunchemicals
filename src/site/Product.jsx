@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowUpRight, ArrowRight, Check, Minus, Plus } from 'lucide-react'
 import { useData } from '../hooks/useData'
 import { productSearchName } from '../data/seo'
+import { getProductDiscoveryTopic, discoveryPath } from '../data/searchLanding'
 import { productUrl, safeUrl } from '../data/site'
 import { getCategory } from '../data/catalogue'
 import Dialog from '../components/public/Dialog'
@@ -24,6 +25,7 @@ export function ProductCard({ product, onSelect, presentationClone = false }) {
 export function ProductDetails({ product, products, onClose, onSelect, onEnquire, standalone = false }) {
   const {site}=useData()
   const category = getCategory(product,site.categories)
+  const careGuide = getProductDiscoveryTopic(product)
   const siblings = products.filter(p=>p.brand===product.brand && p.type===product.type && p.status==='active')
   const [pictureIndex,setPictureIndex]=useState(0)
   const pictures=product.images?.length?product.images:[product.img]
@@ -33,7 +35,7 @@ export function ProductDetails({ product, products, onClose, onSelect, onEnquire
   const Wrapper=standalone?'section':Dialog
   return <Wrapper {...(standalone?{className:'product-dialog standalone-product'}:{onClose,titleId:'product-title',className:'product-dialog'})}>
     <div className="detail-picture" style={{ backgroundColor: category.color }}><span className="eyebrow">{category.name}</span><img src={safeUrl(pictures[pictureIndex]||pictures[0],'')} alt={`${product.name} ${product.variant || ''} ${product.format || ''}`}/>{pictures.length>1&&<div className="detail-thumbnails">{pictures.map((src,i)=><button key={i} aria-label={`View product image ${i+1}`} aria-pressed={i===pictureIndex} onClick={()=>setPictureIndex(i)}><img src={safeUrl(src,'')} alt=""/></button>)}</div>}</div>
-    <div className="detail-copy"><p className="eyebrow">THE JOYTUN COLLECTION</p><p className="detail-brand">{product.brand}</p><Title id="product-title">{standalone?productSearchName(product):(product.type || product.name)}</Title><p className="detail-variant">{product.variant} <span>·</span> {product.format}</p><p className="detail-description">{product.desc}</p>{product.feats&&<ul className="product-features">{product.feats.split(/\n|,/).filter(Boolean).map(f=><li key={f}>{f}</li>)}</ul>}
+    <div className="detail-copy"><p className="eyebrow">THE JOYTUN COLLECTION</p><p className="detail-brand">{product.brand}</p><Title id="product-title">{standalone?productSearchName(product):(product.type || product.name)}</Title><p className="detail-variant">{product.variant} <span>·</span> {product.format}</p><p className="detail-description">{product.desc}</p>{careGuide&&<p className="enquiry-note"><Link className="text-link" to={discoveryPath(careGuide)}>Explore {careGuide.name} in Bangladesh <ArrowUpRight size={16}/></Link></p>}{product.feats&&<ul className="product-features">{product.feats.split(/\n|,/).filter(Boolean).map(f=><li key={f}>{f}</li>)}</ul>}
       {siblings.length>1 && <div className="variant-picker"><h3>Find your favourite</h3><div>{siblings.map(p=><Link to={productUrl(p)} className={p.id===product.id?'selected':''} key={p.id} onClick={e=>{if(e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;e.preventDefault();onSelect(p)}} aria-current={p.id===product.id?'page':undefined}>{p.variant}<small>{p.format}</small></Link>)}</div></div>}
       <button className="care-button" onClick={()=>onEnquire(product)}>Enquire about this product <ArrowUpRight size={18}/></button><p className="enquiry-note">For product availability, orders and wholesale enquiries.</p>
       <div className="care-accordion"><button onClick={()=>setExpanded(v=>!v)} aria-expanded={expanded}>Use & care {expanded?<Minus size={18}/>:<Plus size={18}/>}</button>{expanded&&<p>{product.usage || site.products.usage}</p>}</div>
