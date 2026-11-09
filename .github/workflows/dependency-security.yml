@@ -1,0 +1,32 @@
+name: Dependency Security Scan
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    - cron: '23 5 * * 1'
+permissions:
+  contents: read
+jobs:
+  production-dependencies:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install the exact locked dependency graph
+        run: npm ci
+      - name: Audit production dependency vulnerabilities (high or critical)
+        run: npm audit --omit=dev --audit-level=high --json > production-npm-audit.json
+      - name: Upload report for inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-dependency-audit
+          path: production-npm-audit.json
+          retention-days: 14
+          if-no-files-found: ignore
