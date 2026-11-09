@@ -44,7 +44,7 @@ if (preg_match('/^[a-z0-9-]+$/',$project)) {
     $byId=[];foreach($products as $p)$byId[$p['id']]=$p;
     $legacy=['2VqKcNhGaJDDdcQ5jz8P','GSCF1oQTMfNZOwoF4MBD','UPchN0eAp36hMXbvSZcb','YW0IEk3seLxFLGRGfPpR','qFZbsuOBjzvf9tFB4MFP','tWAIvhaR4gpd53qA4OaE'];
     foreach($cached['products']??[] as $p){if(in_array($p['id'],$legacy,true))continue;$byId[$p['id']]=array_merge($byId[$p['id']]??[],$p);}
-    $products=array_values(array_filter($byId,function($p){return !preg_match('/baby|শিশু/iu',($p['name']??'').' '.($p['cat']??'').' '.($p['category']??''));}));
+    $products=array_values(array_filter($byId,function($p){return in_array($p['id']??'',['joytun-baby-detergent-blue','joytun-baby-detergent-pink'],true) || !preg_match('/baby|শিশু/iu',($p['name']??'').' '.($p['cat']??'').' '.($p['category']??''));}));
 }
 $site['brand']['location']='Kanchpur, Sonargaon, Narayanganj, Bangladesh.';
 $origin=$defaults['origin'];$path=parse_url($_SERVER['REQUEST_URI']??'/',PHP_URL_PATH);$path=rtrim($path,'/')?:'/';
@@ -115,3 +115,4 @@ if(!$admin&&!$missing){$body.='<nav aria-label="Our brands">';foreach($site['bra
 $body.='</main></div>';
 $html=str_replace('<div id="root"></div>','<div id="root">'.$body.'</div>',$html);
 header('Content-Type: text/html; charset=utf-8');header('Cache-Control: no-cache');echo $html;
+

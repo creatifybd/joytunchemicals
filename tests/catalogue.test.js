@@ -4,12 +4,12 @@ import { readFile, readdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { approvedProducts, mergeCatalogue, filterCatalogue, careCategories } from '../src/data/catalogue.js';
 
-test('the approved catalogue contains 22 unique products across six care categories', () => {
-  assert.equal(approvedProducts.length,22);
-  assert.equal(new Set(approvedProducts.map(p=>p.id)).size,22);
-  assert.equal(new Set(approvedProducts.map(p=>p.img)).size,22);
+test('the approved catalogue contains 24 unique products across six care categories', () => {
+  assert.equal(approvedProducts.length,24);
+  assert.equal(new Set(approvedProducts.map(p=>p.id)).size,24);
+  assert.equal(new Set(approvedProducts.map(p=>p.img)).size,24);
   const counts=Object.fromEntries(careCategories.map(c=>[c.id,filterCatalogue(approvedProducts,c.id).length]));
-  assert.deepEqual(counts,{laundry:3,hand:8,kitchen:6,floor:2,glass:2,bathroom:1});
+  assert.deepEqual(counts,{laundry:5,hand:8,kitchen:6,floor:2,glass:2,bathroom:1});
 });
 
 test('all product PNGs are byte-for-byte identical to the approved archive originals',async()=>{
@@ -24,8 +24,8 @@ test('all product PNGs are byte-for-byte identical to the approved archive origi
 
 test('legacy family cards and baby products cannot reappear from the remote collection',()=>{
   const merged=mergeCatalogue([{id:'tWAIvhaR4gpd53qA4OaE',name:'n’Olive Hand Wash',status:'active'},{id:'baby-pink',name:'Baby Detergent Pink',status:'active'},{id:'baby-blue',name:'Baby Detergent Blue',status:'active'}]);
-  assert.equal(merged.length,22);
-  assert(!merged.some(p=>/baby/i.test(p.name)));
+  assert.equal(merged.length,24);
+  assert.equal(merged.filter(p=>/baby/i.test(p.name)).length,2);
 });
 
 test('admin changes override an approved product, and archived products stay hidden',()=>{
@@ -40,7 +40,7 @@ test('search works with apostrophe variants, fragrance plus format, and care fil
   assert.equal(filterCatalogue(approvedProducts,'all','nolive').length,8);
   assert.equal(filterCatalogue(approvedProducts,'hand','apple refill').length,1);
   assert.equal(filterCatalogue(approvedProducts,'kitchen','orange').length,3);
-  assert.equal(filterCatalogue(approvedProducts,'all','baby').length,0);
+  assert.equal(filterCatalogue(approvedProducts,'all','baby').length,2);
   assert.equal(filterCatalogue(approvedProducts,'all','not-a-product').length,0);
 });
 
@@ -52,3 +52,4 @@ test('known opaque images upgrade to cutouts while custom admin uploads remain u
  const updated=mergeCatalogue([{id:'joytun-mr-glasso-spray',img:custom,images:[custom]}]);
  assert.equal(updated.find(p=>p.slug==='mr-glasso-spray').img,custom);
 });
+

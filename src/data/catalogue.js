@@ -31,6 +31,8 @@ const entries = [
   ['mr-glasso-spray', 'Mr. Glasso', 'Glass Cleaner', 'Original', 'Trigger spray', 'glass'],
   ['mr-glasso-refill', 'Mr. Glasso', 'Glass Cleaner', 'Original', 'Refill bottle', 'glass'],
   ['t-flush-toilet-cleaner', 'T-Flush', 'Toilet Cleaner', 'Original', '750 ml bottle', 'bathroom'],
+  ['baby-detergent-blue', 'Joytun', 'Baby Detergent Powder', 'Blue', '500 g box', 'laundry'],
+  ['baby-detergent-pink', 'Joytun', 'Baby Detergent Powder', 'Pink', '500 g box', 'laundry'],
 ];
 
 const descriptions = {
@@ -42,7 +44,7 @@ const descriptions = {
   bathroom: 'A dedicated cleaner for your toilet-care routine, in an angled-neck bottle. Read and follow the safety and application instructions on the label. Never mix cleaning products.',
 };
 
-const cutoutSlugs = new Set(['vix-lemon-bar','vix-orange-bar','mr-glasso-spray','mr-glasso-refill','t-flush-toilet-cleaner']);
+const cutoutSlugs = new Set(['baby-detergent-blue','baby-detergent-pink','vix-lemon-bar','vix-orange-bar','mr-glasso-spray','mr-glasso-refill','t-flush-toilet-cleaner']);
 export function transparentProductImage(url) {
   if(typeof url!=='string')return url;
   const match=url.match(/^(?:https:\/\/(?:www\.)?joytunchemicals\.com)?\/images\/products\/([^/?]+)\.png(?:\?.*)?$/);
@@ -54,7 +56,7 @@ export const approvedProducts = entries.map(([slug, brand, type, variant, format
   id: `joytun-${slug}`, order: index, slug, brand, type, variant, format, category,
   name: `${brand} ${type}`, cat: careCategories.find(c => c.id === category).cat,
   img: transparentProductImage(`/images/products/${slug}.png`), images: [transparentProductImage(`/images/products/${slug}.png`)],
-  desc: descriptions[category], variants: `${variant} · ${format}`, feats: '', status: 'active',
+  desc: slug.startsWith('baby-detergent-') ? 'Joytun Baby Detergent Powder in a 500 g box. For washing baby clothes. Follow the directions and precautions on the packaging.' : descriptions[category], variants: `${variant} · ${format}`, feats: '', status: 'active',
 }));
 
 // These six legacy family cards are replaced by the approved individual variants.
@@ -64,7 +66,7 @@ export function mergeCatalogue(remote = []) {
   const byId = new Map(remote.map(p => [p.id, p]));
   const merged = approvedProducts.map(original => ({ ...original, ...byId.get(original.id) }));
   const knownIds = new Set(approvedProducts.map(p => p.id));
-  return [...merged, ...remote.filter(p => !knownIds.has(p.id) && !legacyIds.has(p.id))].filter(p => !isBabyProduct(p)).map(p=>({...p,img:transparentProductImage(p.img),images:p.images?.map(transparentProductImage)}));
+  return [...merged, ...remote.filter(p => !knownIds.has(p.id) && !legacyIds.has(p.id))].filter(p => (!isBabyProduct(p) || approvedProducts.some(a => a.id === p.id))).map(p=>({...p,img:transparentProductImage(p.img),images:p.images?.map(transparentProductImage)}));
 }
 
 export function getCategory(product, categories = careCategories) {
@@ -74,7 +76,7 @@ export function getCategory(product, categories = careCategories) {
 export function filterCatalogue(products, category = 'all', query = '', categories = careCategories) {
   const normalize = value => value.normalize('NFKD').toLowerCase().replace(/[’'‘-]/g, '').replace(/[^\p{L}\p{N}\s]/gu, ' ');
   const words = normalize(query).trim().split(/\s+/).filter(Boolean);
-  return products.filter(p => p.status === 'active' && !isBabyProduct(p) && (category === 'all' || getCategory(p, categories).id === category) && words.every(word => normalize(`${p.name} ${p.brand || ''} ${p.variant || ''} ${p.format || ''} ${p.cat || ''} ${p.slug || ''}`).includes(word))).sort((a,b)=>(a.order??999)-(b.order??999));
+  return products.filter(p => p.status === 'active' && (!isBabyProduct(p) || approvedProducts.some(a => a.id === p.id)) && (category === 'all' || getCategory(p, categories).id === category) && words.every(word => normalize(`${p.name} ${p.brand || ''} ${p.variant || ''} ${p.format || ''} ${p.cat || ''} ${p.slug || ''}`).includes(word))).sort((a,b)=>(a.order??999)-(b.order??999));
 }
 
 export const companyDetails = {
@@ -84,3 +86,4 @@ export const companyDetails = {
   office: 'Kanchpur, Sonargaon, Narayanganj, Bangladesh.',
   factory: 'Kanchpur, Sonargaon, Narayanganj, Bangladesh.',
 };
+
