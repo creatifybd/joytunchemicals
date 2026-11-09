@@ -67,3 +67,8 @@ jobs:
         run: node scripts/verify-deployment.js
         env:
           SITE_URL: ${{ vars.SITE_URL || 'https://www.joytunchemicals.com' }}
+
+      - name: Audit published SEO, product and care pages
+        run: node scripts/audit-public-seo.js
+        env:
+          SITE_URL: https://www.joytunchemicals.com
