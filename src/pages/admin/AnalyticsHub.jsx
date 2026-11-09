@@ -13,8 +13,9 @@ const resources=[
   {name:'Microsoft Clarity',href:'https://clarity.microsoft.com/',description:'Heatmaps and masked session recordings once consent and setup are verified.',icon:MousePointer2}
 ]
 export default function AnalyticsHub(){
- const {site,orders,messages}=useData()
- const enquiryMetrics=summarizeEnquiryRecords(orders,messages)
+ const {site,orders,messages,inboxLoaded,inboxError}=useData()
+ const enquiriesReady=!inboxError&&inboxLoaded?.orders&&inboxLoaded?.messages
+ const enquiryMetrics=enquiriesReady?summarizeEnquiryRecords(orders,messages):null
  const readiness=getAnalyticsReadiness(site.analytics)
  const [embedded,setEmbedded]=useState(false)
  return <div className="analytics-hub">
@@ -25,12 +26,14 @@ export default function AnalyticsHub(){
   </section>
   <section className="admin-panel analytics-enquiry-panel" aria-label="First-party enquiry records">
    <div><h2>Website enquiry records</h2><p>Counts come from saved Firestore records already accessible in the admin inbox. They are not GA4 traffic, qualified leads, completed purchases, or keyword-attributed conversions.</p></div>
-   <div className="analytics-metric-grid">
-     <div><span>Contact messages</span><strong>{enquiryMetrics.contactMessages}</strong></div>
-     <div><span>Product enquiries</span><strong>{enquiryMetrics.productEnquiries}</strong></div>
-     <div><span>Saved enquiries · 28 days</span><strong>{enquiryMetrics.last28Days}</strong></div>
-   </div>
-   <p className="analytics-small">Last 28 days uses each record's saved server timestamp. {enquiryMetrics.undated>0?`${enquiryMetrics.undated} record(s) lack a valid timestamp and are excluded from the 28-day figure.`:'Records missing timestamps are not counted in the 28-day figure.'} Records may include internal tests or duplicates; do not interpret these totals as a conversion rate.</p>
+   {inboxError?<p role="alert">{inboxError}</p>:!enquiriesReady?<p role="status">Loading private enquiry records…</p>:<>
+     <div className="analytics-metric-grid">
+       <div><span>Contact messages</span><strong>{enquiryMetrics.contactMessages}</strong></div>
+       <div><span>Product enquiries</span><strong>{enquiryMetrics.productEnquiries}</strong></div>
+       <div><span>Saved enquiries · 28 days</span><strong>{enquiryMetrics.last28Days}</strong></div>
+     </div>
+     <p className="analytics-small">Last 28 days uses each record's saved server timestamp. {enquiryMetrics.undated>0?`${enquiryMetrics.undated} record(s) lack a valid timestamp and are excluded from the 28-day figure.`:'Records missing timestamps are not counted in the 28-day figure.'} Records may include internal tests or duplicates; do not interpret these totals as a conversion rate.</p>
+   </>}
    <p><Link to="/admin/messages">Review contact messages</Link> · <Link to="/admin/orders">Review product enquiries</Link></p>
   </section>
   <section className="admin-panel analytics-readiness"><ShieldCheck size={24}/><div><h2>Verified website stream & data quality</h2><p><strong>{readiness.title}</strong> — {readiness.detail}</p><p>GA4 Property: <code>{JOYTUN_GA4.propertyId}</code> · Website Stream: <code>{JOYTUN_GA4.measurementId}</code> · Current Website Studio ID: <code>{site.analytics.measurementId||'Not configured in direct mode'}</code></p><p>Clarity configuration: <strong>{site.analytics.clarityEnabled?'Enabled in settings':'Not enabled in settings'}</strong>. Google Analytics Enhanced Measurement browser-history page views must not duplicate the website’s manual SPA page_view events. Confirm with DebugView before trusting Views or Conversion numbers.</p><p>These indicators are configuration checks, not proof of live events. No OAuth tokens or reporting secrets are embedded in the website. Continue the <Link to="/admin/marketing">measurement setup checklist</Link> for GA4, Search Console and privacy verification.</p></div></section>
