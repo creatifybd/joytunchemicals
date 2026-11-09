@@ -54,3 +54,11 @@ Security and privacy: masked sessions, minimal client event payloads, role-limit
 - Google Product markup alone does not secure a Shopping/Merchant listing. Availability, price, reviews or offers must never be invented.
 - Google free APIs have quotas; no billing or paid connectors should be added without explicit approval.
 - Do not publish this branch to production until the review checks pass.
+
+## SEO and first-party reporting update — 9 November 2026
+- New `/care/` guides are linked contextually from their 24 approved Product pages, in both server-rendered HTML and the React detail view. This builds two-way topical navigation without adding unsupported keyword claims.
+- BreadcrumbList JSON-LD for `/care/` and `/products/:slug` now follows a meaningful navigation path: Home > Our products > the specific guide or SKU. This replaces the misleading Home > Home structured-data path that guide URLs previously emitted.
+- Admin Analytics now displays aggregate **saved Firestore record counts** for contact messages and `type:product-enquiry` submissions, including an optional last-28-days count using valid server timestamps. These are not GA4 users, conversions, completed sales, qualified leads, unique people, or attributed keyword performance. Records with missing timestamps are excluded from the recent count, never silently guessed.
+- Live provider data still needs GA4 DebugView validation and Looker Studio chart QA; low sample sizes and missing event receipt must not be represented as business performance.
+- New URLs published 9 November were not necessarily indexed immediately: Search Console's earlier sitemap snapshot reflected its previous read of 7 November. Avoid interpreting historical discovered/indexed counts as proof of indexing of the new guides. Request indexing has no guaranteed acceptance or ranking effect.
+- All changes are free and use existing GitHub Actions / Firestore subscriptions; no paid analytics service, new provider API key, or original product artwork is required.
