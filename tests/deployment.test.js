@@ -4,7 +4,7 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { createServer } from 'node:http';
-import { selectDirectory, uploadBuild, deploy } from '../deploy-ftp.js';
+import { selectDirectory, uploadBuild, deploy, retryableFtpHandshake, connectFtpWithRetry } from '../deploy-ftp.js';
 import { verifyDeployment } from '../scripts/verify-deployment.js';
 
 function directoryClient(directories, code = 550) {
@@ -119,3 +119,30 @@ test('live check accepts the current build and rejects 403, stale HTML, broken r
     await assert.rejects(verifyDeployment(url, directory), message);
   }
 });
+
+test('retries only transient handshake failures with a fresh client and no uploaded files', async () => {
+ let attempts=0,closed=0,pauses=[]
+ const client=await connectFtpWithRetry({host:'ftp.invalid',user:'dummy',password:'dummy'}, {
+  clientFactory:()=>({
+   async access(){attempts++;if(attempts<3)throw new Error('Server sent FIN packet unexpectedly, closing connection.')},
+   close(){closed++}
+  }),
+  pause:async ms=>{pauses.push(ms)}
+ })
+ assert.equal(attempts,3)
+ assert.equal(closed,2)
+ assert.deepEqual(pauses,[5000,10000])
+ assert(client)
+})
+test('wrong FTP credentials or directory conditions never trigger reconnect',async()=>{
+ assert.equal(retryableFtpHandshake({code:530,message:'Authentication failed'}),false)
+ assert.equal(retryableFtpHandshake({code:550,message:'Directory unavailable'}),false)
+ assert.equal(retryableFtpHandshake({code:'ECONNRESET',message:'Socket failure'}),true)
+ assert.equal(retryableFtpHandshake({message:'Server sent FIN packet unexpectedly'}),true)
+ let attempts=0
+ await assert.rejects(connectFtpWithRetry({}, {
+   clientFactory:()=>({async access(){attempts++;throw Object.assign(new Error('Login incorrect'),{code:530})},close(){}}),
+   pause:async()=>{throw new Error('Should never retry bad credentials')}
+ }),/Login incorrect/)
+ assert.equal(attempts,1)
+})
