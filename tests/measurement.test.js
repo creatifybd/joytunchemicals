@@ -39,3 +39,22 @@ test('section exposure requires at least 10 percent visible for its one-second t
  assert.equal(meetsSectionExposure({isIntersecting:false,intersectionRatio:0.4},false),false)
  assert.equal(meetsSectionExposure(null,false),false)
 })
+
+test('tracking never claims delivery before GA4 or GTM destination is ready',()=>{
+ const calls=[]
+ globalThis.window={location:{pathname:'/products/rio-detergent',href:'https://www.joytunchemicals.com/products/rio-detergent'},dispatchEvent(){}}
+ try{
+   setMeasurement(true,{mode:'direct',measurementId:'G-TEST'})
+   assert.equal(track('view_item',{item_id:'rio-detergent'}),false)
+   assert.equal(track('generate_lead',{form_id:'contact'}),false)
+   window.gtag=(...args)=>calls.push(args)
+   assert.equal(track('view_item',{item_id:'rio-detergent'}),true)
+   assert.equal(calls.length,1)
+   setMeasurement(true,{mode:'gtm'})
+   delete window.dataLayer
+   assert.equal(track('generate_lead',{form_id:'contact'}),false)
+   window.dataLayer=[]
+   assert.equal(track('generate_lead',{form_id:'contact'}),true)
+   assert.equal(window.dataLayer.length,1)
+ }finally{setMeasurement(false);delete globalThis.window}
+})
