@@ -1,0 +1,37 @@
+name: IndexNow URL Discovery
+
+on:
+  workflow_dispatch:
+    inputs:
+      submit_all:
+        description: 'Submit all approved current URLs as an initial discovery batch'
+        type: boolean
+        default: true
+  workflow_run:
+    workflows:
+      - Deploy to Hostinger
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+concurrency:
+  group: joytun-indexnow-submission
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Notify participating search engines only when content changes
+        run: node scripts/submit-indexnow.js
+        env:
+          INDEXNOW_MODE: ${{ github.event_name == 'workflow_dispatch' && 'all' || 'changed' }}
+          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
