@@ -35,3 +35,4 @@ jobs:
         env:
           INDEXNOW_MODE: ${{ github.event_name == 'workflow_dispatch' && 'all' || 'changed' }}
           DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+          GITHUB_TOKEN: ${{ github.token }}
