@@ -1,5 +1,19 @@
 # JOYTUN Chemical Industries — React Website
 
+## Joytun Master Quality Checklist and Continuous Audits
+
+The authoritative, evidence-based [SEO & Analytics Master Checklist](docs/master-seo-analytics-checklist.md) records completed work, automated verification gates, and provider-only follow-ups. The companion [progress issue](https://github.com/creatifybd/joytunchemicals/issues/4) carries latest release and blocker evidence.
+
+**Automated checks:**
+- Every push to `main` runs the full code tests, FTP deploy, release-marker verification and a public SEO audit.
+- The public audit checks **38 baseline canonical pages**, sitemap, robots, JSON-LD and **24 original product images** with real image content types.
+- [Daily Public SEO Health](https://github.com/creatifybd/joytunchemicals/actions/workflows/public-seo-health.yml) runs on a free GitHub Actions schedule and can be triggered manually. GitHub may delay/disable schedules and a passing public audit does **not** prove Google indexing or rankings.
+- The FTP uploader retries a bounded number of transient connection **handshake** failures with a new connection, but never retries credentials errors, wrong directories or interrupted asset publication.
+
+**Provider verification remains separate:** Google Search Console indexing; GA4 DebugView `page_view`/`generate_lead`, key events; signed-in Looker Studio metric accuracy; Clarity consent/masking; authenticated mobile analytics UI. These cannot be asserted from GitHub CI alone.
+
+---
+
 ## Setup
 
 ### 1. Install dependencies
