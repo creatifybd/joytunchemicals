@@ -21,7 +21,7 @@ Existing Looker Studio: https://lookerstudio.google.com/reporting/6834aed1-7c9a-
 | Product-to-category guide internal links | DONE / AUTOMATED | Product details server HTML and React contain correct contextual links |
 | robots.txt and XML sitemap | DONE / AUTOMATED | 38 baseline public URLs with 24 product image sitemap references |
 | Public website canonical/metadata/structured-data audit | DONE / AUTOMATED | Every canonical public page checked; failures flag a red GitHub Action |
-| Daily autonomous free external health check | DONE / AUTOMATED | GitHub Actions cron + manual dispatch; checks 38 public pages & sitemap |
+| On-demand public SEO QA (development/testing only) | DONE / MANUAL | Scheduled cron removed for Actions-policy caution; run manually only when validating an approved change. Production release automatically tests the 38 pages and 24 product assets |
 | Post-deploy public audit | DONE / AUTOMATED | Production job fails when canonical, page availability, robots or schema breaks |
 | Google Search Console initial property/sitemap | DONE previously | Original native submission Success in provider; confirm new last-read externally |
 | New seven guides + two baby SKUs indexed | ONGOING EXTERNAL | Check 9 URLs individually in Search Console; never infer indexing from Sitemap Success |
@@ -66,7 +66,14 @@ Existing Looker Studio: https://lookerstudio.google.com/reporting/6834aed1-7c9a-
 
 ## No-repeat workflow
 - All future technical changes should update this checklist and the GitHub issue tracker before/after release.
-- CI checks the latest source, deploy checks built assets and public URLs; a **scheduled daily health job** can detect regressions without another chat prompt. Scheduled GitHub Actions are dependent on GitHub scheduling/notifications and do not represent an always-on ChatGPT process.
+- PR quality checks test new code; production releases verify built assets and all public URLs. The former daily scheduled crawler was deliberately removed on 10 November 2026. Manual public SEO QA is for active development/troubleshooting, never unattended general monitoring.
 - Public sitemap audit failure is actionable; inspect the GitHub Actions log rather than claiming invisible ranking improvements.
 - Recheck the official Google and Clarity reports when an authenticated browser session is available **without requesting a paid tool or guessing results**.
 - Keep Product artwork byte-for-byte original, all claims verifiable, and no paid integrations without approval.
+
+## GitHub account safety / approved usage (reviewed 10 November 2026)
+- The old GitHub-hosted **daily cron** was disabled. There are no recurring `schedule:` triggers in the repository's three workflow definitions. The manual public SEO QA command is preserved only for deliberate development/testing.
+- `quality.yml` runs once for a relevant pull request; updated pushes cancel superseded in-progress checks. `deploy.yml` runs on a deliberate merge/push to main or authenticated manual dispatch and verifies the live release. GitHub token permissions remain read-only and no additional OAuth tokens or secrets were introduced.
+- Never use GitHub Actions to create artificial traffic, inflate analytics/search rankings, scrape GitHub users, continuously poll unrelated third-party sites, send bulk messages, run mining, or host an always-on service.
+- Account owner should review **GitHub Settings → Billing and licensing → Usage** and **Repository → Actions** for unusually frequent/unexpected jobs. GitHub can still independently enforce its evolving Terms and Acceptable Use Policies; this setup minimizes risk, not guarantees immunity.
+- Official references: https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features and https://docs.github.com/en/site-policy/acceptable-use-policies/github-acceptable-use-policies.

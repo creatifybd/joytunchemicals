@@ -4,11 +4,13 @@
 
 The authoritative, evidence-based [SEO & Analytics Master Checklist](docs/master-seo-analytics-checklist.md) records completed work, automated verification gates, and provider-only follow-ups. The companion [progress issue](https://github.com/creatifybd/joytunchemicals/issues/4) carries latest release and blocker evidence.
 
-**Automated checks:**
+**Development and release checks (minimal usage):**
 - Every push to `main` runs the full code tests, FTP deploy, release-marker verification and a public SEO audit.
 - The public audit checks **38 baseline canonical pages**, sitemap, robots, JSON-LD and **24 original product images** with real image content types.
-- [Daily Public SEO Health](https://github.com/creatifybd/joytunchemicals/actions/workflows/public-seo-health.yml) runs on a free GitHub Actions schedule and can be triggered manually. GitHub may delay/disable schedules and a passing public audit does **not** prove Google indexing or rankings.
+- [Manual Public SEO QA](https://github.com/creatifybd/joytunchemicals/actions/workflows/public-seo-health.yml) has **no cron schedule**. Run it manually only when developing or troubleshooting Joytun. The normal deployment workflow already performs the full SEO audit after publishing. A passing audit does **not** prove Google indexing or rankings.
 - The FTP uploader retries a bounded number of transient connection **handshake** failures with a new connection, but never retries credentials errors, wrong directories or interrupted asset publication.
+
+**GitHub Actions safety:** The scheduled daily crawler was removed on 10 November 2026 to avoid using GitHub Actions as an always-on monitoring service. Workflows now run only for software development, pull-request quality checks, and deliberate site releases, with read-only token permissions except where deployment secrets are explicitly required. No crypto-mining, scraping GitHub, spam, traffic generation or unrelated automation is permitted. GitHub [Actions Terms](https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features) and [Acceptable Use](https://docs.github.com/en/site-policy/acceptable-use-policies/github-acceptable-use-policies) apply; no configuration can guarantee immunity from enforcement.
 
 **Provider verification remains separate:** Google Search Console indexing; GA4 DebugView `page_view`/`generate_lead`, key events; signed-in Looker Studio metric accuracy; Clarity consent/masking; authenticated mobile analytics UI. These cannot be asserted from GitHub CI alone.
 

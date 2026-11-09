@@ -1,32 +1,32 @@
-name: Daily Public SEO Health
+name: Manual Public SEO QA
 
+# Intended only for deliberate application development and troubleshooting.
+# No cron / unattended monitoring. GitHub Actions usage must remain within
+# software development and testing permitted by GitHub policy.
 on:
-  schedule:
-    # 08:17 Bangladesh time (02:17 UTC); GitHub may delay scheduled jobs.
-    - cron: '17 2 * * *'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: joytun-public-health
+  group: joytun-manual-public-qa
   cancel-in-progress: true
 
 jobs:
   public-seo:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     steps:
       - name: Checkout published configuration
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 24
-      - name: Audit sitemap and public product/care URLs
+      - name: Audit only approved public product and care routes
         run: node scripts/audit-public-seo.js
         env:
           SITE_URL: https://www.joytunchemicals.com
