@@ -1,0 +1,32 @@
+name: Daily Public SEO Health
+
+on:
+  schedule:
+    # 08:17 Bangladesh time (02:17 UTC); GitHub may delay scheduled jobs.
+    - cron: '17 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: joytun-public-health
+  cancel-in-progress: true
+
+jobs:
+  public-seo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout published configuration
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Audit sitemap and public product/care URLs
+        run: node scripts/audit-public-seo.js
+        env:
+          SITE_URL: https://www.joytunchemicals.com
