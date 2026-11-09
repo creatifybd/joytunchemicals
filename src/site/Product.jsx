@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowUpRight, ArrowRight, Check, Minus, Plus } from 'lucide-react'
 import { useData } from '../hooks/useData'
@@ -9,6 +9,7 @@ import { getCategory } from '../data/catalogue'
 import Dialog from '../components/public/Dialog'
 import {track,productMeasurement} from '../lib/measurement'
 import { addOrder } from '../lib/firestore'
+import { createEnquirySubmitter } from '../lib/enquirySubmission'
 
 export function ProductCard({ product, onSelect, presentationClone = false }) {
   const {site}=useData()
@@ -46,8 +47,31 @@ export function ProductDetails({ product, products, onClose, onSelect, onEnquire
 export function ProductEnquiry({ product, onClose }) {
   const [form,setForm]=useState({name:'',phone:'',email:'',qty:'1',address:''})
   const [state,setState]=useState('idle')
+  const submission=useRef({productId:null,submit:null})
+  if(submission.current.productId!==product.id){
+    submission.current={
+      productId:product.id,
+      submit:createEnquirySubmitter({
+        save:payload=>addOrder(payload),
+        emit:track,
+        formId:'product_enquiry',
+        itemId:product.slug||product.id
+      })
+    }
+  }
   const change=e=>setForm({...form,[e.target.name]:e.target.value})
-  async function submit(e){e.preventDefault();if(state==='sending')return;setState('sending');try{await addOrder({...form,product:product.name,productId:product.id,variant:`${product.variant || ''} · ${product.format || ''}`,type:'product-enquiry'});track('generate_lead',{form_id:'product_enquiry',item_id:product.slug||product.id});setState('success')}catch{track('form_error',{form_id:'product_enquiry',error_type:'submission_failed'});setState('error')}}
+  async function submit(e){
+    e.preventDefault()
+    if(state==='sending'||state==='success')return
+    setState('sending')
+    const result=await submission.current.submit({
+      ...form,product:product.name,productId:product.id,
+      variant:`${product.variant || ''} · ${product.format || ''}`,
+      type:'product-enquiry'
+    })
+    if(result==='success')setState('success')
+    else if(result==='error')setState('error')
+  }
   return <Dialog onClose={onClose} titleId="enquiry-title" className="enquiry-dialog">
     {state==='success'?<div className="form-success" role="status"><span><Check size={30}/></span><h2 id="enquiry-title">Thank you for reaching out.</h2><p>Your product enquiry has been received. Our team will contact you to discuss availability and next steps.</p><button className="care-button" onClick={onClose}>Keep exploring <ArrowRight size={18}/></button></div>:<><p className="eyebrow">LET’S TALK PRODUCTS</p><h2 id="enquiry-title">A little more information.</h2><div className="enquiry-product"><img src={product.images?.[0]||product.img} alt=""/><div><strong>{product.name}</strong><p>{product.variant} · {product.format}</p></div></div>
       <form className="care-form" data-clarity-mask="true" onFocus={e=>{if(!e.currentTarget.dataset.started){if(track('form_start',{form_id:'product_enquiry'}))e.currentTarget.dataset.started='1'}}} onSubmit={submit}><div className="form-row"><label>Full name <span>*</span><input name="name" required autoComplete="name" value={form.name} onChange={change}/></label><label>Phone <span>*</span><input name="phone" required type="tel" autoComplete="tel" value={form.phone} onChange={change}/></label></div><div className="form-row"><label>Email<input name="email" type="email" autoComplete="email" value={form.email} onChange={change}/></label><label>Quantity <span>*</span><input name="qty" required type="number" min="1" max="100000" step="1" value={form.qty} onChange={change}/></label></div><label>Location / delivery address <span>*</span><textarea name="address" required rows="2" autoComplete="street-address" value={form.address} onChange={change}/></label>{state==='error'&&<p className="form-error" role="alert">Your enquiry could not be sent. Please try again or email info@joytunchemicals.com.</p>}<button className="care-button" disabled={state==='sending'}>{state==='sending'?'Sending…':'Send product enquiry'}<ArrowUpRight size={18}/></button><p className="enquiry-note">This sends an enquiry. No payment is taken.</p></form></>}

@@ -65,3 +65,16 @@ The site's new /privacy text describes actual instrumentation, not a legal certi
 ## Section exposure accuracy (code QA)
 - Require IntersectionObserver intersectionRatio >= 0.1 **and** isIntersecting and visible document tab before beginning the existing one-second section_view timer. The older observer could count any intersecting sliver even when less than 10% was on screen.
 - These are visibility exposures, not evidence the user read the section. Check in a browser at common desktop/mobile viewport sizes and confirm hidden tabs never trigger. Do not treat raw event counts as unique visitors or conversions.
+
+## Enquiry conversion integrity — November 2026
+- Active customer-facing Contact and Product Enquiry forms use the same testable submission coordinator. Rapid repeated clicks while a request is pending cannot produce multiple Firestore writes from the same open form, nor duplicate a generate_lead event.
+- Send the existing GA4-recommended `generate_lead` event *only after* Firestore confirms the record was saved, once per completed form submission. A failed write emits only `form_error`; it permits a retry. Analytics transport failure must not show a false save failure to the user.
+- Every analytics payload stays on the strict event-parameter allowlist: `form_id` and optional approved SKU `item_id`; no names, emails, phone numbers, address, quantity, message, Firestore document ID, or raw referrer/query content.
+- This is **in-tab single-flight protection**, not database-wide duplicate prevention. Repeated independent submissions, browser refreshes, multi-tab sends, service retries and malicious clients still need backend deduplication/rate controls if those become real business problems. Do not claim server-side exactly-once processing.
+- The `generate_lead` event is **not** a sale, a qualified lead or a verified marketing conversion until GA4 Realtime/DebugView confirms receipt and the property marks that event as a key event. Check GA4 Admin → Events/Key events; avoid creating a second generate_lead transformation from enhanced `form_submit`.
+- Manual verification (without writing fake leads to production): use an explicitly approved test environment or an agreed labeled test record; reject double click while submitting; force a controlled Firestore permission failure to check no lead event; confirm one successful Contact and Product form event in GA4 DebugView; compare to the Inbox counts and reconcile consent blockers.
+
+## First-party product enquiry trend
+- The authenticated Admin Analytics section additionally ranks **Top enquired products (last 28 days)** from saved `orders` documents where `type=product-enquiry`, grouping by approved `productId` and using valid `createdAt` server timestamps only.
+- It shows a product's approved name, variant, format, and saved enquiry count; it never displays visitor contact details in the ranking. Records without timestamps or outside the interval are excluded.
+- These are not GA4 product views, conversion session rates, unique customers, revenue, orders completed, qualified leads, or search-attributed leads. Firestore subscribers already used for admin inbox supply these records; no new paid reporting APIs or additional public Firestore read access is required.

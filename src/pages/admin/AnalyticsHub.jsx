@@ -3,7 +3,7 @@ import { useData } from '../../hooks/useData'
 import { ExternalLink, BarChart3, Search, MousePointer2, ShieldCheck, Activity } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { JOYTUN_GA4, getAnalyticsReadiness } from '../../lib/analyticsHealth'
-import { summarizeEnquiryRecords } from '../../lib/enquiryMetrics'
+import { summarizeEnquiryRecords, topEnquiredProducts } from '../../lib/enquiryMetrics'
 
 const report='https://lookerstudio.google.com/reporting/6834aed1-7c9a-4f89-a948-9c5d0365b6be'
 const resources=[
@@ -13,9 +13,10 @@ const resources=[
   {name:'Microsoft Clarity',href:'https://clarity.microsoft.com/',description:'Heatmaps and masked session recordings once consent and setup are verified.',icon:MousePointer2}
 ]
 export default function AnalyticsHub(){
- const {site,orders,messages,inboxLoaded,inboxError}=useData()
+ const {site,orders,messages,products,inboxLoaded,inboxError}=useData()
  const enquiriesReady=!inboxError&&inboxLoaded?.orders&&inboxLoaded?.messages
  const enquiryMetrics=enquiriesReady?summarizeEnquiryRecords(orders,messages):null
+ const popularProducts=enquiriesReady?topEnquiredProducts(orders,products):[]
  const readiness=getAnalyticsReadiness(site.analytics)
  const [embedded,setEmbedded]=useState(false)
  return <div className="analytics-hub">
@@ -33,6 +34,10 @@ export default function AnalyticsHub(){
        <div><span>Saved enquiries · 28 days</span><strong>{enquiryMetrics.last28Days}</strong></div>
      </div>
      <p className="analytics-small">Last 28 days uses each record's saved server timestamp. {enquiryMetrics.undated>0?`${enquiryMetrics.undated} record(s) lack a valid timestamp and are excluded from the 28-day figure.`:'Records missing timestamps are not counted in the 28-day figure.'} Records may include internal tests or duplicates; do not interpret these totals as a conversion rate.</p>
+     <div className="analytics-product-interest"><h3>Most-enquired products · last 28 days</h3>
+       {popularProducts.length?<table><thead><tr><th scope="col">Product</th><th scope="col">Saved enquiries</th></tr></thead><tbody>{popularProducts.map(p=><tr key={p.productId}><td>{p.name}</td><td>{p.count}</td></tr>)}</tbody></table>:<p>No dated product enquiry records in the last 28 days.</p>}
+       <p className="analytics-small">Based on saved product enquiry records, not website product views, revenue, unique buyers or keyword attribution. Missing timestamps are excluded.</p>
+     </div>
    </>}
    <p><Link to="/admin/messages">Review contact messages</Link> · <Link to="/admin/orders">Review product enquiries</Link></p>
   </section>
