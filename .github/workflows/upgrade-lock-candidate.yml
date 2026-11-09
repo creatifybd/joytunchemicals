@@ -1,0 +1,31 @@
+name: Dependency Lockfile Upgrade Candidate
+
+on:
+  push:
+    branches:
+      - 'feature/master-audit-monitoring-*'
+
+permissions:
+  contents: read
+
+jobs:
+  resolve:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Generate a reviewable lockfile (no production write)
+        run: npm install --package-lock-only --ignore-scripts
+      - name: Audit the candidate production dependency graph
+        run: npm audit --package-lock-only --omit=dev --json > candidate-production-audit.json || true
+      - name: Upload proposed lockfile and audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-upgrade-candidate
+          path: |
+            package-lock.json
+            candidate-production-audit.json
+          retention-days: 7
