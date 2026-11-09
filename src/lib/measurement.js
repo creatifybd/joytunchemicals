@@ -27,11 +27,18 @@ export function trackingAllowed({enabled,consent,pathname,search='',isAdmin=fals
  return !!enabled&&consent==='accepted'&&!isAdmin&&!internal&&!pathname.startsWith('/admin')&&!new URLSearchParams(search).has('preview')
 }
 let active=false,mode='',id=''
-export function setMeasurement(activeNow,settings={}){active=activeNow;mode=settings.mode;id=settings.measurementId;if(active&&typeof window!=='undefined')window.dispatchEvent(new Event('joytun-measurement-ready'))}
+export function setMeasurement(activeNow,settings={}){
+ active=!!activeNow;mode=settings.mode;id=settings.measurementId
+ if(active&&typeof window!=='undefined'&&typeof window.dispatchEvent==='function')window.dispatchEvent(new Event('joytun-measurement-ready'))
+}
 export const measurementEnabled=()=>active
 export function track(name,params={}){
  const clean=sanitizeEvent(name,params)
  if(!active||!clean||typeof window==='undefined')return false
+ // The UI may mount before an asynchronous tag is ready. Do not claim an event
+ // was delivered when neither the GA4 queue nor the GTM dataLayer exists.
+ if(mode==='gtm'&&!Array.isArray(window.dataLayer))return false
+ if(mode!=='gtm'&&typeof window.gtag!=='function')return false
  const fields={...clean,page_path:window.location.pathname,page_location:cleanLocation(window.location.href)}
  if(mode==='gtm')window.dataLayer?.push({...Object.fromEntries([...new Set(Object.values(eventFields).flat())].map(k=>[k,null])),event:name,...fields})
  else window.gtag?.('event',name,{...fields,send_to:id})
