@@ -91,9 +91,9 @@ export const setTheme = (data) =>
   setDoc(doc(db, 'settings', 'theme'), { ...data, updatedAt: serverTimestamp() })
 
 // ─── Orders ───────────────────────────────────────────────────────────────────
-export const subscribeOrders = (cb) =>
+export const subscribeOrders = (cb, onError) =>
   onSnapshot(query(collection(db, 'orders'), orderBy('createdAt', 'desc')), snap =>
-    cb(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))), onError
   )
 
 export const addOrder = (data) =>
@@ -102,9 +102,9 @@ export const addOrder = (data) =>
 export const deleteOrder = (id) => deleteDoc(doc(db, 'orders', id))
 
 // ─── Messages ─────────────────────────────────────────────────────────────────
-export const subscribeMessages = (cb) =>
+export const subscribeMessages = (cb, onError) =>
   onSnapshot(query(collection(db, 'messages'), orderBy('createdAt', 'desc')), snap =>
-    cb(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))), onError
   )
 
 export const addMessage = (data) =>
