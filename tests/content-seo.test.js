@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import {defaultSite,mergeSite,LOCATION,validateSite,safeUrl,resolveProductImage} from '../src/data/site.js'
 import {approvedProducts,filterCatalogue} from '../src/data/catalogue.js'
 import {getSeo} from '../src/data/seo.js'
-import {discoveryTopics,getDiscoveryProducts} from '../src/data/searchLanding.js'
+import {discoveryTopics,getDiscoveryProducts,getProductDiscoveryTopic,discoveryPath} from '../src/data/searchLanding.js'
 test('old office content cannot replace the single approved location',()=>{
  const site=mergeSite({brand:{location:'AHN Tower',name:'Updated company'},home:{title:'A new title'}})
  assert.equal(site.brand.location,LOCATION);assert.equal(site.brand.name,'Updated company');assert.equal(site.home.title,'A new title');assert.equal(site.home.description,defaultSite.home.description)
@@ -91,4 +91,26 @@ test('seven distinct, relevant search discovery topics use only catalogue produc
    assert(!seo.title.toLowerCase().includes('best '),'Do not make unverified superiority claims')
  }
  assert.match(getSeo(defaultSite,approvedProducts,'/care/not-real').robots,/noindex/)
+})
+
+test('all approved SKUs link to a matching topical care guide; guides carry real breadcrumbs',()=>{
+ assert.equal(approvedProducts.length,24)
+ for(const product of approvedProducts){
+   const topic=getProductDiscoveryTopic(product)
+   assert(topic,product.slug+' has no matched guide')
+   assert(getDiscoveryProducts(topic,approvedProducts).some(p=>p.slug===product.slug))
+   const seo=getSeo(defaultSite,approvedProducts,'/products/'+product.slug)
+   const crumbs=seo.schema['@graph'].find(n=>n['@type']==='BreadcrumbList').itemListElement
+   assert.deepEqual(crumbs.map(v=>v.name),['Home','Our products',[product.name,product.variant,product.format].filter(Boolean).join(' — ')])
+   assert.equal(crumbs[1].item,'https://www.joytunchemicals.com/products')
+   assert.equal(crumbs[2].item,seo.url)
+ }
+ for(const topic of discoveryTopics){
+   assert.equal(discoveryPath(topic),'/care/'+topic.slug)
+   const seo=getSeo(defaultSite,approvedProducts,discoveryPath(topic))
+   const crumbs=seo.schema['@graph'].find(n=>n['@type']==='BreadcrumbList').itemListElement
+   assert.deepEqual(crumbs.map(v=>v.name),['Home','Our products',topic.name])
+   assert.deepEqual(crumbs.map(v=>v.position),[1,2,3])
+   assert.equal(crumbs[2].item,seo.url)
+ }
 })
