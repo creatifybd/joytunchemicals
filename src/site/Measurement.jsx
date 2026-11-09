@@ -15,8 +15,7 @@ export default function Measurement(){
  const allowed=!loading&&configured&&trackingAllowed({enabled:a.enabled,consent,pathname,search,isAdmin,internal})
  useEffect(()=>{const open=()=>setOpen(true);window.addEventListener('joytun-cookie-settings',open);return()=>window.removeEventListener('joytun-cookie-settings',open)},[])
  useEffect(()=>{
-  setMeasurement(allowed,a)
-  if(!allowed)return
+  if(!allowed){setMeasurement(false);return}
   window.dataLayer=window.dataLayer||[]
   window.gtag=window.gtag||function(){window.dataLayer.push(arguments)}
   window.gtag('consent','default',{analytics_storage:'granted',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'})
@@ -32,6 +31,9 @@ export default function Measurement(){
    window.clarity('consentv2',{analytics_Storage:'granted',ad_Storage:'denied'})
    inject('joytun-clarity',`https://www.clarity.ms/tag/${a.clarityId}`)
   }
+  // Signal readiness only after gtag/dataLayer queues exist and the tag is configured.
+  // Product views waiting for consent can now safely queue their first event.
+  setMeasurement(true,a)
   return()=>setMeasurement(false)
  },[allowed,a])
  useEffect(()=>{
