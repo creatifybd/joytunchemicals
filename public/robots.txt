@@ -1,0 +1,7 @@
+# Joytun Chemical Industries OPC — public website crawling guidance
+User-agent: *
+Allow: /
+
+# The website sends noindex for protected admin pages and site previews.
+# Keep those paths crawlable so crawlers can see the noindex directive.
+Sitemap: https://www.joytunchemicals.com/sitemap.xml
