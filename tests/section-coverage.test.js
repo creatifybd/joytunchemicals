@@ -5,6 +5,8 @@ import { sanitizeEvent, trackingAllowed, meetsSectionExposure } from '../src/lib
 
 const pages=readFileSync('src/site/Pages.jsx','utf8')
 const product=readFileSync('src/site/Product.jsx','utf8')
+const guide=readFileSync('src/site/DiscoveryPage.jsx','utf8')
+const brand=readFileSync('src/site/BrandPage.jsx','utf8')
 const expected=[
  'catalogue_intro','product_catalogue',
  'about_intro','about_gallery','about_story','about_brands','about_purpose',
@@ -30,4 +32,11 @@ test('section tracking only sends a bounded section id with no form values',()=>
  assert.equal(trackingAllowed({enabled:true,consent:'accepted',pathname:'/contact'}),true)
  assert.equal(meetsSectionExposure({isIntersecting:true,intersectionRatio:.08},false),false)
  assert.equal(meetsSectionExposure({isIntersecting:true,intersectionRatio:.12},false),true)
+})
+
+test('brand and care guide pages mark editorial and product discovery sections separately',()=>{
+ const guideSections=[...guide.matchAll(/data-section="([a-z_]+)"/g)].map(x=>x[1])
+ const brandSections=[...brand.matchAll(/data-section="([a-z_]+)"/g)].map(x=>x[1])
+ assert.deepEqual(guideSections,['care_guide_intro','care_guide_products'])
+ assert.deepEqual(brandSections,['brand_intro','brand_products'])
 })
