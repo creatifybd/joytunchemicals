@@ -1,0 +1,48 @@
+name: Public Browser UX QA (review or manual)
+
+# Only a purpose-built QA PR or explicit manual invocation can run Chromium.
+# No daily/weekly cron, no post-deploy polling and no general website monitoring.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - scripts/browser-ui-audit.mjs
+      - .github/workflows/browser-ux.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: joytun-browser-qa-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  public-ux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install locked app dependencies and one-off browser test package
+        run: |
+          npm ci
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Smoke-test public desktop/mobile pages and pre-consent privacy
+        run: node scripts/browser-ui-audit.mjs
+        env:
+          SITE_URL: https://www.joytunchemicals.com
+      - name: Save browser QA screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: joytun-public-ux-qa
+          path: qa-screenshots/
+          retention-days: 7
+          if-no-files-found: ignore
