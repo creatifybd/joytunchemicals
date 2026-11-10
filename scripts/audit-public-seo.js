@@ -59,9 +59,9 @@ export const validProductImageResponse = response =>
 export async function auditPublicSeo(baseUrl=SITE_URL,{fetchImpl=fetch,concurrency=5}={}) {
  const base=new URL(baseUrl)
  const errors=[]
+ const getResponse=path=>fetchImpl(new URL(path,base),{headers:{'Cache-Control':'no-cache'},signal:AbortSignal.timeout(20000)})
  const get=async path=>{
-   const url=new URL(path,base)
-   const response=await fetchImpl(url,{headers:{'Cache-Control':'no-cache'},signal:AbortSignal.timeout(20000)})
+   const response=await getResponse(path)
    if(!response.ok)throw new Error('HTTP '+response.status+' '+path)
    return response.text()
  }
@@ -70,6 +70,7 @@ export async function auditPublicSeo(baseUrl=SITE_URL,{fetchImpl=fetch,concurren
  if(!robots.includes('Sitemap: '+SITE_URL+'/sitemap.xml'))errors.push('Robots policy is missing canonical Sitemap URL')
   const sitemap=inspectSitemap(await get('/sitemap.xml'))
  if(sitemap.missing.length||sitemap.unexpected.length) errors.push('Sitemap mismatch: missing='+sitemap.missing.join(',')+' extra='+sitemap.unexpected.join(','))
+ if(new Set(sitemap.urls).size!==sitemap.urls.length)errors.push('Sitemap contains duplicate URLs')
  const routes=[...expectedSeoRoutes]
  const workers=Array.from({length:Math.min(concurrency,routes.length)},async()=>{
    while(routes.length){
@@ -81,6 +82,17 @@ export async function auditPublicSeo(baseUrl=SITE_URL,{fetchImpl=fetch,concurren
    }
  })
  await Promise.all(workers)
+ // Verify that non-public routes are not indexable and unknown routes return a real 404.
+ try {
+   const admin=await getResponse('/admin/login')
+   if(admin.status!==200)errors.push('/admin/login: Expected HTTP 200, got '+admin.status)
+   else if(!/<meta\\s+name="robots"\\s+content="noindex(?:,|\")/i.test(await admin.text()))errors.push('/admin/login: Missing noindex directive')
+ } catch(error){errors.push('/admin/login: '+error.message)}
+ try {
+   const missing=await getResponse('/joytun-not-a-real-page-health-check')
+   if(missing.status!==404)errors.push('/unknown: Expected HTTP 404, got '+missing.status)
+   else if(!/<meta\\s+name="robots"\\s+content="noindex(?:,|\")/i.test(await missing.text()))errors.push('/unknown: 404 page missing noindex directive')
+ } catch(error){errors.push('/unknown: '+error.message)}
  // Check the original approved assets without changing or re-encoding them.
  const images=[...new Set(approvedProducts.map(p=>p.img).filter(Boolean))]
  const queue=[...images]

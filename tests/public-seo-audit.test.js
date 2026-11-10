@@ -46,6 +46,8 @@ test('public health check reports broken canonical without inventing a pass',asy
  assert.equal(result.routesChecked,38)
  assert.equal(result.sitemapURLs,38)
  assert(result.errors.some(err=>err.includes('Incorrect canonical')))
+ assert(result.errors.some(err=>err.includes('/admin/login: Missing noindex')))
+ assert(result.errors.some(err=>err.includes('/unknown: Expected HTTP 404')))
 })
 
 test('product images must return actual images, not HTML fallback with HTTP 200',()=>{
@@ -54,4 +56,16 @@ test('product images must return actual images, not HTML fallback with HTTP 200'
  assert.equal(validProductImageResponse(response(200,'image/webp')),true)
  assert.equal(validProductImageResponse(response(200,'text/html; charset=utf-8')),false)
  assert.equal(validProductImageResponse(response(404,'image/png')),false)
+})
+
+test('deployment audit rejects duplicate sitemap URLs even when all expected URLs exist',async()=>{
+ const canonical='<link rel="canonical" href="https://www.joytunchemicals.com/">'
+ const fake=async url=>{
+  const p=new URL(url).pathname
+  const sitemap='<urlset>'+[...expectedSeoRoutes,'/'].map(route=>'<url><loc>'+SITE_URL+route+'</loc></url>').join('')+'</urlset>'
+  return {ok:true,status:200,headers:{get:()=>p.startsWith('/images/')?'image/png':'text/html'},async text(){return p==='/sitemap.xml'?sitemap:`<html><head>${canonical}</head><body><h1>Placeholder</h1></body></html>`}}
+ }
+ const result=await auditPublicSeo(SITE_URL,{fetchImpl:fake,concurrency:10})
+ assert.equal(result.sitemapURLs,39)
+ assert(result.errors.some(error=>error.includes('duplicate URLs')))
 })
