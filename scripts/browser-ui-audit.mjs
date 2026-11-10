@@ -28,7 +28,7 @@ try{
   {name:'desktop',viewport:{width:1440,height:900},isMobile:false},
   {name:'mobile',viewport:{width:390,height:844},isMobile:true}
  ]){
-  const context=await browser.newContext({viewport:device.viewport,isMobile:device.isMobile,deviceScaleFactor:1,locale:'en-US'})
+  const context=await browser.newContext({viewport:device.viewport,isMobile:device.isMobile,deviceScaleFactor:1,locale:'en-US',reducedMotion:'no-preference'})
   const page=await context.newPage()
   const pageErrors=[]
   const prematureTracking=[]
@@ -67,7 +67,27 @@ try{
     await page.waitForFunction(previous=>document.querySelector('.care-banner-copy h2')?.textContent?.trim()!==previous,before,{timeout:10000})
     assert((await page.locator('.care-banner-link').getAttribute('href')||'').startsWith('/products?category='),'Active category banner has no catalogue link')
     await page.waitForFunction(()=>[...document.querySelectorAll('.care-banner-art img')].length>0&&[...document.querySelectorAll('.care-banner-art img')].every(img=>img.complete&&img.naturalWidth>0),null,{timeout:12000})
-    await banner.screenshot({path:`qa-screenshots/${device.name}-category-banner.png`})
+    // Regression: a mouse click must not leave the carousel permanently paused.
+    const autoBefore=(await page.locator('.care-banner-copy h2').textContent())?.trim()
+    const started=Date.now()
+    await page.waitForFunction(previous=>document.querySelector('.care-banner-copy h2')?.textContent?.trim()!==previous,autoBefore,{timeout:6200})
+    const elapsed=Date.now()-started
+    assert(elapsed>=2000&&elapsed<5000,'3-second autoplay interval did not advance after mouse click: '+elapsed+' ms on '+device.name)
+    // Product shapes differ, but both must occupy identically sized visual slots.
+    for(const category of ['Hand care','Glass care']){
+      await page.getByRole('button',{name:'Show '+category+' banner'}).click()
+      const slots=await page.locator('.care-banner-product-slot').evaluateAll(nodes=>nodes.map(el=>{
+        const rect=el.getBoundingClientRect()
+        return {x:rect.x,width:rect.width,height:rect.height}
+      }))
+      assert.equal(slots.length,2,category+' must show two approved product slots')
+      assert(Math.abs(slots[0].height-slots[1].height)<1,category+' product heights differ')
+      assert(Math.abs(slots[0].width-slots[1].width)<1,category+' product widths differ')
+      const gap=slots[1].x-(slots[0].x+slots[0].width)
+      assert(gap>=10&&gap<=40,category+' product spacing is unbalanced: '+gap)
+      await page.waitForFunction(()=>[...document.querySelectorAll('.care-banner-product-image')].length===2&&[...document.querySelectorAll('.care-banner-product-image')].every(img=>img.complete&&img.naturalWidth>0),null,{timeout:12000})
+      await banner.screenshot({path:`qa-screenshots/${device.name}-${category==='Hand care'?'hand':'glass'}-pair.png`,animations:'disabled'})
+    }
     await page.evaluate(()=>window.scrollTo(0,0))
    }
    if(route==='/products'){
