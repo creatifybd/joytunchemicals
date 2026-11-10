@@ -1,3 +1,11 @@
+// Auto-advance every three seconds while the category carousel is visible.
+export const CATEGORY_BANNER_AUTOPLAY_MS=3000
+
+// Keyboard focus and reduced-motion settings take priority over autoplay.
+export function canAutoplayCategoryBanners({count,keyboardPaused,visible,tabVisible,reducedMotion,motionEnabled}) {
+ return count>1&&!keyboardPaused&&visible&&tabVisible&&!reducedMotion&&motionEnabled
+}
+
 // One banner per published care category. Select existing catalogue assets only.
 // Do not generate, crop, recolour or rewrite product packaging artwork.
 export function getCategoryBanners(site, products) {

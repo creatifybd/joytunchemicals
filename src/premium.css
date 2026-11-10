@@ -228,8 +228,11 @@
 .public-site .care-banner-art{height:365px;min-width:0;position:relative;display:flex;align-items:center;justify-content:center;isolation:isolate}
 .public-site .care-banner-orbit{position:absolute;inset:4% 15%;border:1px solid #203b2a18;border-radius:50%;background:radial-gradient(circle,#fff9 0%,#fff0 64%);box-shadow:0 0 0 48px #fff3,0 0 0 98px #fff2;pointer-events:none}
 .public-site .care-banner-art img{display:block;object-fit:contain;object-position:center;position:relative;filter:drop-shadow(0 20px 21px #2635241f)}
-.public-site .care-banner-primary{height:94%;max-width:71%;z-index:2}
-.public-site .care-banner-secondary{height:68%;max-width:40%;z-index:1;margin-right:-6%;transform:translateY(28px)}
+/* Identical visual stages; untouched original image pixels, shapes and labels. */
+.public-site .care-banner-products{position:relative;z-index:2;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:end;gap:clamp(20px,2vw,34px);width:min(100%,475px);margin-inline:auto}
+.public-site .care-banner-product-slot{height:315px;min-width:0;display:flex;align-items:flex-end;justify-content:center}
+.public-site .care-banner-product-image{display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 20px 21px #2635241f)}
+.public-site .care-banner-products.is-single{grid-template-columns:minmax(0,215px);justify-content:center}
 .public-site .care-banner-controls{display:flex;align-items:center;justify-content:space-between;min-height:65px;padding-bottom:20px;position:relative;z-index:3}
 .public-site .care-banner-dots{display:flex;align-items:center;gap:8px}
 .public-site .care-banner-dots button{min-width:32px;min-height:40px;border:0;background:transparent;cursor:pointer;padding:14px 4px;display:grid;place-items:center}
@@ -240,7 +243,7 @@
 .public-site .care-banner-arrows button:hover{background:#fff}
 .public-site .care-banner-banners button:focus-visible,.public-site .care-hero-banners a:focus-visible,.public-site .care-hero-banners button:focus-visible{outline:3px solid #285a44;outline-offset:2px}
 @keyframes care-banner-enter{from{opacity:.55;transform:translateY(8px)}to{opacity:1;transform:none}}
-@media(max-width:800px){.public-site .care-banner-inner{gap:14px;min-height:0;padding-block:40px 8px;grid-template-columns:1fr}.public-site .care-banner-copy h2{font-size:clamp(35px,7vw,52px);margin:12px 0}.public-site .care-banner-copy p{max-width:520px;font-size:15px;margin-bottom:16px}.public-site .care-banner-art{height:300px}.public-site .care-banner-primary{height:95%}.public-site .care-banner-secondary{height:72%}.public-site .care-banner-controls{min-height:60px}}
-@media(max-width:440px){.public-site .care-banner-inner{padding-top:34px}.public-site .care-banner-copy h2{font-size:38px}.public-site .care-banner-art{height:250px}.public-site .care-banner-orbit{inset:10% 14%}.public-site .care-banner-controls{padding-bottom:12px}.public-site .care-banner-dots{gap:2px}.public-site .care-banner-dots button{min-width:26px}.public-site .care-banner-dots button span{width:18px}.public-site .care-banner-dots button.selected span{width:25px}}
+@media(max-width:800px){.public-site .care-banner-inner{gap:14px;min-height:0;padding-block:40px 8px;grid-template-columns:1fr}.public-site .care-banner-copy h2{font-size:clamp(35px,7vw,52px);margin:12px 0}.public-site .care-banner-copy p{max-width:520px;font-size:15px;margin-bottom:16px}.public-site .care-banner-art{height:300px}.public-site .care-banner-products{width:min(100%,410px);gap:22px}.public-site .care-banner-product-slot{height:260px}.public-site .care-banner-controls{min-height:60px}}
+@media(max-width:440px){.public-site .care-banner-inner{padding-top:34px}.public-site .care-banner-copy h2{font-size:38px}.public-site .care-banner-art{height:250px}.public-site .care-banner-orbit{inset:10% 14%}.public-site .care-banner-products{width:min(100%,340px);gap:14px}.public-site .care-banner-product-slot{height:220px}.public-site .care-banner-products.is-single{grid-template-columns:minmax(0,165px)}.public-site .care-banner-controls{padding-bottom:12px}.public-site .care-banner-dots{gap:2px}.public-site .care-banner-dots button{min-width:26px}.public-site .care-banner-dots button span{width:18px}.public-site .care-banner-dots button.selected span{width:25px}}
 @media(prefers-reduced-motion:reduce){.public-site .care-banner-inner{animation:none}.public-site .care-hero-banners,.public-site .care-banner-art img,.public-site .care-banner-link{transition:none!important}}
 .public-site.motion-off .care-banner-inner{animation:none}
