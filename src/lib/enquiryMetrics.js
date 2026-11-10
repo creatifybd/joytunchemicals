@@ -1,3 +1,9 @@
+// A failed or unfinished Firestore subscription must not look like a genuine zero count.
+export function inboxLoadStatus(loaded={},error='',kind='messages') {
+  if(error)return 'error'
+  return loaded?.[kind]?'ready':'loading'
+}
+
 // First-party record counts from already-authorized Admin Firestore subscriptions.
 // Not GA4 events, unique visitors, qualified leads, sales, or attributed conversions.
 const DAY_MS=24*60*60*1000
