@@ -3,7 +3,7 @@ export const eventFields={
  page_view:['page_path','page_location','page_title','page_referrer'],
  section_view:['section_id'],select_content:['content_type','item_id','section_id'],
  view_item:['item_id','item_brand','item_category','items'],
- select_item:['item_id','item_brand','item_category','section_id','items'],category_select:['category_id'],
+ select_item:['item_id','item_brand','item_category','section_id','item_list_name','items'],category_select:['category_id'],
  contact_click:['contact_method','section_id'],form_start:['form_id'],
  generate_lead:['form_id','item_id'],form_error:['form_id','error_type'],
  video_open:['video_id'],video_start:['video_id'],video_progress:['video_id','video_percent'],video_complete:['video_id']
