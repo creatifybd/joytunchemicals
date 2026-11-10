@@ -2,12 +2,12 @@ import {useEffect,useRef,useState} from 'react'
 import {Link,useLocation} from 'react-router-dom'
 import {useData} from '../hooks/useData'
 import {useAuth} from '../hooks/useAuth'
-import {cleanLocation,setMeasurement,track,trackingAllowed,meetsSectionExposure} from '../lib/measurement'
+import {cleanLocation,setMeasurement,track,trackingAllowed,meetsSectionExposure,productMeasurement} from '../lib/measurement'
 const key='joytun-analytics-consent-v1'
 const read=()=>{try{return localStorage.getItem(key)||''}catch{return ''}}
 function inject(id,src){if(document.getElementById(id))return;const s=document.createElement('script');s.id=id;s.src=src;s.async=true;document.head.append(s)}
 export default function Measurement(){
- const {site}=useData(),{isAdmin,loading}=useAuth(),{pathname,search}=useLocation()
+ const {site,products}=useData(),{isAdmin,loading}=useAuth(),{pathname,search}=useLocation()
  const a=site.analytics,[consent,setConsent]=useState(read),[open,setOpen]=useState(false)
  const lastPage=useRef(''),previousPage=useRef('')
  let internal=false;try{internal=localStorage.getItem('joytun-internal-traffic')==='1'}catch{}
@@ -55,10 +55,15 @@ export default function Measurement(){
   document.querySelectorAll('[data-section]').forEach(el=>observer.observe(el))
   const visibility=()=>{if(document.hidden){timers.forEach(clearTimeout);timers.clear()}}
   document.addEventListener('visibilitychange',visibility)
-  const click=e=>{const link=e.target.closest('a');if(!link||link.closest('[aria-hidden="true"]'))return;const href=link.getAttribute('href')||'',section=link.closest('[data-section]')?.dataset.section||'navigation';if(href.startsWith('tel:')||href.startsWith('mailto:'))track('contact_click',{contact_method:href.startsWith('tel:')?'phone':'email',section_id:section});if(href.startsWith('/products/'))track('select_content',{content_type:'product',item_id:href.split('/').pop(),section_id:section});if(href.startsWith('/products?category='))track('category_select',{category_id:new URL(href,location.origin).searchParams.get('category')})}
+  const click=e=>{const link=e.target.closest('a');if(!link||link.closest('[aria-hidden="true"]'))return;const href=link.getAttribute('href')||'',section=link.closest('[data-section]')?.dataset.section||'navigation';if(href.startsWith('tel:')||href.startsWith('mailto:'))track('contact_click',{contact_method:href.startsWith('tel:')?'phone':'email',section_id:section});if(href.startsWith('/products/')){
+   const slug=new URL(href,location.origin).pathname.split('/')[2]
+   track('select_content',{content_type:'product',item_id:slug,section_id:section})
+   const selected=products.find(product=>(product.slug||product.id)===slug&&product.status==='active')
+   if(selected)track('select_item',{...productMeasurement(selected),section_id:section,item_list_name:section})
+  }if(href.startsWith('/products?category='))track('category_select',{category_id:new URL(href,location.origin).searchParams.get('category')})}
   document.addEventListener('click',click)
   return()=>{observer.disconnect();timers.forEach(clearTimeout);document.removeEventListener('click',click);document.removeEventListener('visibilitychange',visibility)}
- },[allowed,pathname])
+ },[allowed,pathname,products])
  function choose(value){try{localStorage.setItem(key,value)}catch{}setConsent(value);setOpen(false);if(value!=='accepted'){setMeasurement(false);if(a.measurementId)window[`ga-disable-${a.measurementId}`]=true;window.gtag?.('consent','update',{analytics_storage:'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'});window.clarity?.('consentv2',{analytics_Storage:'denied',ad_Storage:'denied'});location.reload()}}
  if(!a.enabled||!configured||isAdmin||internal||(!open&&consent))return null
  return <aside className="analytics-consent" aria-label="Analytics preferences"><div><strong>Help us improve your experience</strong><p>With your permission, we use analytics and, when enabled, masked interaction recordings to understand how our website is used. <Link to="/privacy">Privacy details</Link></p></div><div className="consent-actions"><button onClick={()=>choose('declined')}>Decline</button><button onClick={()=>choose('accepted')}>Accept analytics</button></div></aside>

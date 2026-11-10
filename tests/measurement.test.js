@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {sanitizeEvent,cleanLocation,trackingAllowed,setMeasurement,track,meetsSectionExposure} from '../src/lib/measurement.js'
+import {sanitizeEvent,cleanLocation,trackingAllowed,setMeasurement,track,meetsSectionExposure,productMeasurement,sanitizeItems} from '../src/lib/measurement.js'
 import {defaultSite,mergeSite,validateSite} from '../src/data/site.js'
 import {getSeo} from '../src/data/seo.js'
 import {approvedProducts} from '../src/data/catalogue.js'
@@ -56,5 +56,54 @@ test('tracking never claims delivery before GA4 or GTM destination is ready',()=
    window.dataLayer=[]
    assert.equal(track('generate_lead',{form_id:'contact'}),true)
    assert.equal(window.dataLayer.length,1)
+ }finally{setMeasurement(false);delete globalThis.window}
+})
+
+test('GA4 item payloads use approved product names and drop unknown data',()=>{
+ const p=approvedProducts.find(v=>v.slug==='nolive-lavender-pump')||approvedProducts[0]
+ const payload=productMeasurement(p)
+ const view=sanitizeEvent('view_item',payload)
+ assert.equal(view.item_id,p.slug||p.id)
+ assert.deepEqual(view.items,[{
+  item_id:p.slug||p.id,
+  item_name:p.name,
+  item_brand:p.brand,
+  item_category:p.category,
+  item_variant:p.variant
+ }])
+ const click=sanitizeEvent('select_item',{...payload,section_id:'featured',item_list_name:'featured',email:'secret@example.com',phone:'12345'})
+ assert.equal(click.items[0].item_id,p.slug||p.id)
+ assert.equal(click.section_id,'featured')
+ assert.equal(click.item_list_name,'featured')
+ assert.equal(click.email,undefined)
+ assert.equal(click.phone,undefined)
+ assert.equal(sanitizeEvent('select_item',{items:'[object Object]'}),null)
+ assert.equal(sanitizeItems([{item_id:'123',item_name:'Good'},{item_id:'456'}]),null)
+ assert.equal(sanitizeItems([{item_id:'bad@example.com',item_name:'Product'}]),null)
+ assert.deepEqual(sanitizeItems([{item_id:'valid-product',item_name:'Product',email:'secret@example.com',website:'https://example.com'}]),[{item_id:'valid-product',item_name:'Product'}])
+})
+
+test('GA4 direct sends structured items; GTM clears stale ecommerce and sends fresh items',()=>{
+ const direct=[],layer=[]
+ globalThis.window={
+  location:{pathname:'/products',href:'https://www.joytunchemicals.com/products?email=private'},
+  dispatchEvent(){},gtag:(...args)=>direct.push(args),dataLayer:layer
+ }
+ try{
+  const p=approvedProducts[0],params=productMeasurement(p)
+  setMeasurement(true,{mode:'direct',measurementId:'G-TEST'})
+  assert.equal(track('view_item',params),true)
+  assert.equal(direct.length,1)
+  assert.equal(direct[0][0],'event')
+  assert.equal(direct[0][1],'view_item')
+  assert.equal(direct[0][2].items[0].item_id,p.slug||p.id)
+  assert.equal(direct[0][2].page_location,'https://www.joytunchemicals.com/products')
+  setMeasurement(true,{mode:'gtm'})
+  assert.equal(track('select_item',{...params,section_id:'featured',item_list_name:'featured'}),true)
+  assert.equal(layer.length,2)
+  assert.deepEqual(layer[0],{ecommerce:null})
+  assert.equal(layer[1].event,'select_item')
+  assert.equal(layer[1].ecommerce.items[0].item_id,p.slug||p.id)
+  assert.equal(layer[1].items,undefined)
  }finally{setMeasurement(false);delete globalThis.window}
 })
