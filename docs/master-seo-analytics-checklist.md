@@ -43,6 +43,7 @@ Existing Looker Studio: https://lookerstudio.google.com/reporting/6834aed1-7c9a-
 | Private contact / product enquiry counts | DONE / AUTOMATED | Firestore authorized admin inbox, loading / error states, timestamped records |
 | Top enquired products, last 28d | DONE / AUTOMATED | Aggregates saved Firestore records; never claims sales or keyword-attributed leads |
 | 10% visibility for one-second `section_view` | DONE / AUTOMATED | Visibility ratio >= 0.1, not hidden; tests |
+| Products, About, Contact and care-guide section coverage | CODE IMPLEMENTED / PROVIDER QA PENDING | First-party `data-section` instrumentation covers catalogue, product detail, contact details/FAQ, story, gallery, brand and care-guide blocks. Existing consent-gated IntersectionObserver emits `section_view` only after 10% visibility for 1s. Source-level tests verify markers; receive/reporting status needs authorized GA4 account. Event catalog: `docs/ga4-event-measurement-map.md`. |
 | GA4 DebugView: one page_view per navigation | NEEDS PRIVATE PROVIDER QA | Explicitly test first load, SPA navigation, consent, and no double fire |
 | GA4 DebugView: generate_lead receipt | NEEDS PRIVATE PROVIDER QA | Safely test valid submission without fake production leads |
 | GA4 `generate_lead` designated a Key Event | NEEDS PRIVATE PROVIDER QA | Verify GA4 Admin key event setting; don't assume |
