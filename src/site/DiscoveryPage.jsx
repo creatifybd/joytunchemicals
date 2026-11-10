@@ -21,13 +21,13 @@ export default function DiscoveryPage() {
   const items = getDiscoveryProducts(topic, products)
   return <>
     <div className="shell product-breadcrumb"><Link to="/">Home</Link><span>/</span><Link to="/products">Our products</Link><span>/</span><span>{topic.name}</span></div>
-    <section className="shell section-space discovery-intro">
+    <section className="shell section-space discovery-intro" data-section="care_guide_intro">
       <p className="eyebrow">JOYTUN CARE GUIDE · BANGLADESH</p>
       <h1>{topic.heading}</h1>
       <p>{topic.introduction}</p>
       <div lang="bn" className="discovery-bangla"><h2>{topic.headingBn}</h2><p>{topic.introductionBn}</p></div>
     </section>
-    <section className="shell section-space" aria-label={topic.name+' products'}>
+    <section className="shell section-space" data-section="care_guide_products" aria-label={topic.name+' products'}>
       <div className="section-heading"><div><p className="eyebrow">EXPLORE THE COLLECTION</p><h2>{topic.name} products</h2></div></div>
       {items.length
         ? <div className="product-grid catalogue-grid">{items.map(p=><ProductCard key={p.id} product={p}/>)}</div>
