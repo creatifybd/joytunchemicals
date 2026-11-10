@@ -58,6 +58,18 @@ try{
    // Capture a precise warning for horizontal overflow without mistaking a
    // deliberately scrollable product rail for a broken whole-page layout.
    if(item.documentWidth>item.viewport+8)pageErrors.push(route+' document horizontally overflows on '+device.name+' ('+item.documentWidth+' > '+item.viewport+')')
+   if(route==='/'){
+    const banner=page.locator('.care-hero-banners')
+    await banner.waitFor({state:'visible',timeout:14000})
+    assert.equal(await page.locator('.care-banner-dots button').count(),6,'Homepage must display six category banner selectors on '+device.name)
+    const before=(await page.locator('.care-banner-copy h2').textContent())?.trim()
+    await page.getByRole('button',{name:'Next care category'}).click()
+    await page.waitForFunction(previous=>document.querySelector('.care-banner-copy h2')?.textContent?.trim()!==previous,before,{timeout:10000})
+    assert((await page.locator('.care-banner-link').getAttribute('href')||'').startsWith('/products?category='),'Active category banner has no catalogue link')
+    await page.waitForFunction(()=>[...document.querySelectorAll('.care-banner-art img')].length>0&&[...document.querySelectorAll('.care-banner-art img')].every(img=>img.complete&&img.naturalWidth>0),null,{timeout:12000})
+    await banner.screenshot({path:`qa-screenshots/${device.name}-category-banner.png`})
+    await page.evaluate(()=>window.scrollTo(0,0))
+   }
    if(route==='/products'){
     assert((await page.locator('.catalogue-grid .product-card').count())>=24,'Product catalogue has fewer than 24 cards on '+device.name)
    }
