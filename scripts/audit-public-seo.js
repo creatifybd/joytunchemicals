@@ -52,6 +52,13 @@ export function inspectSitemap(xml) {
  const unexpected=urls.filter(url=>!expected.includes(url))
  return {urls,missing,unexpected}
 }
+// Accept either attribute order; a noindex token must be on the robots meta tag.
+// This avoids false negatives from escaped regex literals and formatting changes.
+export function hasNoindexDirective(html) {
+ const tags=html.match(/<meta\b[^>]*>/gi)||[]
+ return tags.some(tag=>/\bname\s*=\s*["']robots["']/i.test(tag)&&/\bcontent\s*=\s*["'][^"']*\bnoindex\b/i.test(tag))
+}
+
 // A missing image may be rewritten to a 200 HTML error page; check MIME type too.
 export const validProductImageResponse = response =>
   response.ok && /^image\//i.test(response.headers?.get?.('content-type')||'')
@@ -86,12 +93,12 @@ export async function auditPublicSeo(baseUrl=SITE_URL,{fetchImpl=fetch,concurren
  try {
    const admin=await getResponse('/admin/login')
    if(admin.status!==200)errors.push('/admin/login: Expected HTTP 200, got '+admin.status)
-   else if(!/<meta\\s+name="robots"\\s+content="noindex(?:,|\")/i.test(await admin.text()))errors.push('/admin/login: Missing noindex directive')
+   else if(!hasNoindexDirective(await admin.text()))errors.push('/admin/login: Missing noindex directive')
  } catch(error){errors.push('/admin/login: '+error.message)}
  try {
    const missing=await getResponse('/joytun-not-a-real-page-health-check')
    if(missing.status!==404)errors.push('/unknown: Expected HTTP 404, got '+missing.status)
-   else if(!/<meta\\s+name="robots"\\s+content="noindex(?:,|\")/i.test(await missing.text()))errors.push('/unknown: 404 page missing noindex directive')
+   else if(!hasNoindexDirective(await missing.text()))errors.push('/unknown: 404 page missing noindex directive')
  } catch(error){errors.push('/unknown: '+error.message)}
  // Check the original approved assets without changing or re-encoding them.
  const images=[...new Set(approvedProducts.map(p=>p.img).filter(Boolean))]

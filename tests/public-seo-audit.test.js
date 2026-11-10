@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {inspectSeoHtml,inspectSitemap,expectedSeoRoutes,auditPublicSeo,validProductImageResponse} from '../scripts/audit-public-seo.js'
+import {inspectSeoHtml,inspectSitemap,expectedSeoRoutes,auditPublicSeo,validProductImageResponse,hasNoindexDirective} from '../scripts/audit-public-seo.js'
 import {defaultSite,SITE_URL} from '../src/data/site.js'
 import {approvedProducts} from '../src/data/catalogue.js'
 import {discoveryTopics} from '../src/data/searchLanding.js'
@@ -68,4 +68,12 @@ test('deployment audit rejects duplicate sitemap URLs even when all expected URL
  const result=await auditPublicSeo(SITE_URL,{fetchImpl:fake,concurrency:10})
  assert.equal(result.sitemapURLs,39)
  assert(result.errors.some(error=>error.includes('duplicate URLs')))
+})
+
+test('robots noindex parsing accepts real PHP HTML meta tags in either attribute order',()=>{
+ assert.equal(hasNoindexDirective('<meta name="robots" content="noindex,nofollow">'),true)
+ assert.equal(hasNoindexDirective('<meta content="noindex,follow" name="robots">'),true)
+ assert.equal(hasNoindexDirective('<META NAME="robots" CONTENT="noindex">'),true)
+ assert.equal(hasNoindexDirective('<meta name="description" content="noindex"><meta name="robots" content="index,follow">'),false)
+ assert.equal(hasNoindexDirective('<meta name="robots" content="index,follow">'),false)
 })
