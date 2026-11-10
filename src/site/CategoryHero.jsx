@@ -43,7 +43,7 @@ export default function CategoryHero(){
  const slide=slides[current%slides.length]
  const {category,primary,secondary}=slide
  const image=p=>safeUrl(p?.images?.[0]||p?.img,'')
- return <section ref={ref} className="care-hero-banners" style={{'--care-banner-bg':category.color||'#edf1dd'}} aria-label="Explore Joytun care categories" aria-roledescription="carousel" onPointerDownCapture={()=>setKeyboardPaused(false)} onFocusCapture={event=>{if(event.target.matches?.(':focus-visible'))setKeyboardPaused(true)}} onBlurCapture={event=>{if(!event.currentTarget.contains(event.relatedTarget))setKeyboardPaused(false)}}>
+ return <section ref={ref} className="care-hero-banners" data-category={category.id} style={{'--care-banner-bg':category.color||'#edf1dd'}} aria-label="Explore Joytun care categories" aria-roledescription="carousel" onPointerDownCapture={()=>setKeyboardPaused(false)} onFocusCapture={event=>{if(event.target.matches?.(':focus-visible'))setKeyboardPaused(true)}} onBlurCapture={event=>{if(!event.currentTarget.contains(event.relatedTarget))setKeyboardPaused(false)}}>
    <div className="shell care-banner-inner" key={category.id}>
      <div className="care-banner-copy"><span className="care-banner-eyebrow">THE JOYTUN COLLECTION <span aria-hidden="true">/</span> {String(current+1).padStart(2,'0')} OF {String(slides.length).padStart(2,'0')}</span><h2>{category.title}</h2><p>{category.description}</p><Link className="care-banner-link" to={`/products?category=${encodeURIComponent(category.id)}`}>Explore {category.name}<ArrowRight size={19}/></Link></div>
      <div className="care-banner-art" aria-label={`${category.name} product photography`}>
