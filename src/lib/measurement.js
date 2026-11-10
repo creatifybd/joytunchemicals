@@ -14,6 +14,9 @@ const itemText=value=>typeof value==='string'&&!/[@<>]|https?:\/\//i.test(value)
 export function sanitizeItems(items){
  if(!Array.isArray(items)||items.length!==1||!items[0]||typeof items[0]!=='object'||Array.isArray(items[0]))return null
  const item=items[0],id=itemText(item.item_id),name=itemText(item.item_name)
+ // Reject an invalid supplied ID (including an email), not merely omit it
+ // while keeping the item name. This prevents accidental PII fallbacks.
+ if(item.item_id!==undefined&&!id)return null
  if(!id&&!name)return null
  if(id&&!/^[A-Za-z0-9_-]{1,100}$/.test(id))return null
  return [Object.fromEntries([
