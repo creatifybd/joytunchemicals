@@ -1,6 +1,11 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth'
-import { auth, googleProvider, isAdminEmail } from '../lib/firebase'
+
+// Public pages render from the server-provided snapshot. Firebase Authentication
+// is needed after first paint for admin state, but not in the critical JS bundle.
+const rawAdmins = import.meta.env.VITE_ADMIN_EMAILS || import.meta.env.VITE_ADMIN_EMAIL || ''
+const adminEmails = rawAdmins.split(',').map(email => email.trim().toLowerCase()).filter(Boolean)
+const isAdminEmail = email => !!email && adminEmails.includes(email.trim().toLowerCase())
+const loadAuth = () => Promise.all([import('firebase/auth'), import('../lib/firebase')])
 
 const AuthContext = createContext(null)
 
@@ -9,14 +14,20 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setUser(u)
-      setLoading(false)
-    })
-    return unsub
+    let stopped = false
+    let unsub = () => {}
+    loadAuth().then(([{ onAuthStateChanged }, { auth }]) => {
+      if (stopped) return
+      unsub = onAuthStateChanged(auth, u => {
+        setUser(u)
+        setLoading(false)
+      }, () => setLoading(false))
+    }).catch(() => { if (!stopped) setLoading(false) })
+    return () => { stopped = true; unsub() }
   }, [])
 
   const signInWithGoogle = async () => {
+    const [{ signInWithPopup, signOut }, { auth, googleProvider }] = await loadAuth()
     const result = await signInWithPopup(auth, googleProvider)
     // Enforce admin-only: reject anyone not in the admin list
     if (!isAdminEmail(result.user.email)) {
@@ -26,7 +37,10 @@ export function AuthProvider({ children }) {
     return result.user
   }
 
-  const logout = () => signOut(auth)
+  const logout = async () => {
+    const [{ signOut }, { auth }] = await loadAuth()
+    return signOut(auth)
+  }
 
   // isAdmin is true only if the logged-in user's email is in ADMIN_EMAILS
   const isAdmin = isAdminEmail(user?.email)

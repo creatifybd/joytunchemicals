@@ -8,7 +8,6 @@ import { productUrl, safeUrl } from '../data/site'
 import { getCategory } from '../data/catalogue'
 import Dialog from '../components/public/Dialog'
 import {track,productMeasurement} from '../lib/measurement'
-import { addOrder } from '../lib/firestore'
 import { createEnquirySubmitter } from '../lib/enquirySubmission'
 
 export function ProductCard({ product, onSelect, presentationClone = false }) {
@@ -52,7 +51,7 @@ export function ProductEnquiry({ product, onClose }) {
     submission.current={
       productId:product.id,
       submit:createEnquirySubmitter({
-        save:payload=>addOrder(payload),
+        save:payload=>import('../lib/firestore').then(({addOrder})=>addOrder(payload)),
         emit:track,
         formId:'product_enquiry',
         itemId:product.slug||product.id

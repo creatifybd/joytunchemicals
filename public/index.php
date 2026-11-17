@@ -27,16 +27,44 @@ $project=$defaults['project'];
 if (preg_match('/^[a-z0-9-]+$/',$project)) {
     $cache=sys_get_temp_dir().'/joytun-public-'.hash('sha256',$project).'.json';
     $cached=is_file($cache)?json_decode(@file_get_contents($cache),true):null;
-    if (!$cached || time()-($cached['time']??0)>30) {
-        $base='https://firestore.googleapis.com/v1/projects/'.rawurlencode($project).'/databases/(default)/documents/';
-        $company=public_read($base.'settings/company');
-        $catalogue=public_read($base.'products?pageSize=1000');
-        $next=['time'=>time(),'website'=>$cached['website']??null,'products'=>$cached['products']??[]];
-        if(isset($company['fields']))$next['website']=fields_value($company['fields'])['website']??null;
-        if(isset($catalogue['documents'])&&!isset($catalogue['nextPageToken'])){
-            $next['products']=array_map(function($doc){$p=fields_value($doc['fields']??[]);$p['id']=basename($doc['name']);return $p;},$catalogue['documents']);
-        }
-        $cached=$next;@file_put_contents($cache,json_encode($cached),LOCK_EX);
+    // Keep Firestore off the critical rendering path. Serve the most recent
+    // snapshot immediately, then refresh it after the response is sent.
+    // Public pages also work from checked-in defaults on a completely cold host.
+    if (!is_array($cached) || time()-($cached['time']??0)>60) {
+        register_shutdown_function(static function () use ($cache,$project) {
+            // Both PHP-FPM and LiteSpeed can complete the visitor response here.
+            if (function_exists('fastcgi_finish_request')) fastcgi_finish_request();
+            elseif (function_exists('litespeed_finish_request')) litespeed_finish_request();
+            else {
+                while (ob_get_level()>0) @ob_end_flush();
+                @flush();
+            }
+            // A lock prevents a burst of visitors from starting duplicate reads.
+            $lock=@fopen($cache.'.lock','c');
+            if (!$lock) return;
+            if (!@flock($lock,LOCK_EX|LOCK_NB)) { @fclose($lock); return; }
+            try {
+                $latest=is_file($cache)?json_decode(@file_get_contents($cache),true):null;
+                if (is_array($latest) && time()-($latest['time']??0)<=60) return;
+                $base='https://firestore.googleapis.com/v1/projects/'.rawurlencode($project).'/databases/(default)/documents/';
+                $company=public_read($base.'settings/company');
+                $catalogue=public_read($base.'products?pageSize=1000');
+                $next=['time'=>time(),'website'=>$latest['website']??null,'products'=>$latest['products']??[]];
+                if(isset($company['fields'])) $next['website']=fields_value($company['fields'])['website']??null;
+                if(isset($catalogue['documents'])&&!isset($catalogue['nextPageToken'])) {
+                    $next['products']=array_map(static function($doc){$p=fields_value($doc['fields']??[]);$p['id']=basename($doc['name']);return $p;},$catalogue['documents']);
+                }
+                // Write atomically so concurrent readers never see partial JSON.
+                $json=json_encode($next);
+                if ($json!==false) {
+                    $tmp=$cache.'.'.getmypid().'.tmp';
+                    if (@file_put_contents($tmp,$json,LOCK_EX)!==false) @rename($tmp,$cache);
+                }
+            } finally {
+                @flock($lock,LOCK_UN);
+                @fclose($lock);
+            }
+        });
     }
     // Recursive merge for objects, replacement for editorial lists (including empty lists).
     function merge_site($base,$saved){foreach($base as $key=>$v){if(!array_key_exists($key,$saved))continue;$new=$saved[$key];$base[$key]=is_array($v)&&array_keys($v)!==range(0,count($v)-1)&&is_array($new)?merge_site($v,$new):$new;}return $base;}
@@ -108,6 +136,11 @@ if($brandPage){$parts=[];foreach($active as $p)if(($p['brand']??'')===$brandPage
 $head='<title>'.esc($title).'</title><meta name="description" content="'.esc($description).'"><meta name="robots" content="'.esc($robots).'"><link rel="canonical" href="'.esc($canonical).'">';
 foreach(['og:title'=>$title,'og:description'=>$description,'og:url'=>$canonical,'og:image'=>$image,'og:type'=>'website','og:site_name'=>$site['brand']['name']] as $k=>$v)$head.='<meta property="'.esc($k).'" content="'.esc($v).'">';
 foreach(['twitter:card'=>'summary_large_image','twitter:title'=>$title,'twitter:description'=>$description,'twitter:image'=>$image] as $k=>$v)$head.='<meta name="'.esc($k).'" content="'.esc($v).'">';
+// Let the browser fetch the above-the-fold hero before React's JS is ready.
+if($path==='/' && !empty($site['media']['showLifestyleImages'])) {
+ $hero=safe_url($site['media']['heroImage']??'','');
+ if($hero!=='')$head.='<link rel="preload" as="image" href="'.esc($hero).'" fetchpriority="high">';
+}
 $flags=JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE;
 $head.='<script id="joytun-schema" type="application/ld+json">'.json_encode(['@context'=>'https://schema.org','@graph'=>$graph],$flags).'</script>';
 $head.='<script>window.__JOYTUN_PUBLIC__='.json_encode(['site'=>$site,'products'=>$products],$flags).';</script>';
@@ -127,5 +160,8 @@ elseif(!$admin&&!$missing){$body.='<p>'.esc($site['brand']['location']).'</p>';i
 if(!$admin&&!$missing){$body.='<nav aria-label="Browse by care topic">';foreach($topics as $t)$body.='<a href="/care/'.esc($t['slug']).'">'.esc($t['name']).'</a> ';$body.='</nav><nav aria-label="Our brands">';foreach($site['brandPages']??[] as $b)$body.='<a href="/brands/'.esc($b['slug']).'">'.esc($b['title']).'</a> ';$body.='</nav>';}
 $body.='</main></div>';
 $html=str_replace('<div id="root"></div>','<div id="root">'.$body.'</div>',$html);
-header('Content-Type: text/html; charset=utf-8');header('Cache-Control: no-cache');echo $html;
+header('Content-Type: text/html; charset=utf-8');
+// Public HTML is identical for every visitor; exclude admin and previews.
+header('Cache-Control: '.($admin||isset($_GET['preview'])?'private, no-store':'public, max-age=60, s-maxage=60, stale-while-revalidate=300'));
+echo $html;
 
