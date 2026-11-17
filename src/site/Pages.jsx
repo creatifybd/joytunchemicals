@@ -4,6 +4,7 @@ import { ArrowUpRight, ArrowRight, Search, X, SlidersHorizontal, Droplets, Flowe
 import { useData } from '../hooks/useData'
 import { getCategory, filterCatalogue } from '../data/catalogue'
 import { resolveProductImage, safeUrl, productUrl } from '../data/site'
+import { optimizedProductImageProps } from '../data/optimizedImages'
 import {track} from '../lib/measurement'
 import { createEnquirySubmitter } from '../lib/enquirySubmission'
 import Reveal from '../components/public/Reveal'
@@ -15,7 +16,7 @@ import { ActionLink, PartnerSection } from './Layout'
 import { ProductCard, ProductDetails, ProductEnquiry } from './Product'
 
 
-function ManagedImage({reference,products,...props}){const src=resolveProductImage(reference,products);return src?<img src={src} {...props}/>:null}
+function ManagedImage({reference,products,displaySizes,...props}){const src=resolveProductImage(reference,products);return src?<img src={src} {...optimizedProductImageProps(src,displaySizes||'(max-width: 650px) 46vw, 350px')} {...props}/>:null}
 
 export function HomePage(){
   const {products,site}=useData()

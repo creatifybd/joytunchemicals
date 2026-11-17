@@ -4,6 +4,7 @@ import {ArrowRight,ChevronLeft,ChevronRight} from 'lucide-react'
 import {useData} from '../hooks/useData'
 import {getCategoryBanners,CATEGORY_BANNER_AUTOPLAY_MS,canAutoplayCategoryBanners} from '../data/heroBanners'
 import {safeUrl} from '../data/site'
+import {optimizedProductImageProps} from '../data/optimizedImages'
 
 // Original product artwork remains unchanged; only CSS positions existing files.
 export default function CategoryHero(){
@@ -50,7 +51,7 @@ export default function CategoryHero(){
        <span className="care-banner-orbit" aria-hidden="true"/>
        <div className={`care-banner-products ${secondary?'':'is-single'}`}>
          {[primary,secondary].filter(Boolean).map(product=><div className="care-banner-product-slot" key={product.id}>
-           <img className="care-banner-product-image" src={image(product)} alt={`${product.name} — ${product.variant}`} loading="lazy" decoding="async"/>
+           <img className="care-banner-product-image" src={image(product)} {...optimizedProductImageProps(image(product),'(max-width: 650px) 42vw, 29vw')} alt={`${product.name} — ${product.variant}`} loading="lazy" decoding="async"/>
          </div>)}
        </div>
      </div>
