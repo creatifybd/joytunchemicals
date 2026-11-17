@@ -65,6 +65,16 @@ Existing Looker Studio: https://lookerstudio.google.com/reporting/6834aed1-7c9a-
 | Zero-cost-first policy | DONE / DOCUMENTED | No paid connectors, top-ups, ads, billing or new subscriptions |
 | Real user QA and final cross-device preview | NEEDS REAL BROWSER QA | Verify signed-in analytics and live mobile interactions before declaring visual perfection |
 
+## D. First-visit performance (17 November 2026)
+| Item | Status | Definition of done / evidence |
+|---|---|---|
+| Remove repeated blocking Firestore reads from PHP page generation | CODE IMPLEMENTED / LIVE QA PENDING | Existing `/tmp` snapshot is served immediately; stale snapshot refreshes after visitor response with a nonblocking lock and atomic replacement. Must confirm PHP host supports response-finishing. |
+| Public HTML short cache and admin/preview exclusion | CODE IMPLEMENTED / LIVE QA PENDING | Public responses cache for 60 seconds; admin and preview responses are private with `no-store`. |
+| Homepage hero discovery | CODE IMPLEMENTED / LIVE QA PENDING | Server adds an early high-priority preload for the currently configured homepage image. |
+| Defer Firebase SDK from the initial public bundle | CODE IMPLEMENTED / LIVE QA PENDING | Authentication, Firestore subscriptions and enquiry saving use dynamic imports; build splits large Firebase dependency into a non-entry chunk. |
+| Unmodified original product artwork | DONE / TESTED | All original PNGs remain byte-identical; deferred/lazy loading is preferred over altering approved artwork. |
+| Mobile PageSpeed and actual Bangladesh user experience | PENDING FIELD QA | Compare Core Web Vitals, mobile LCP and TTFB after deployment; remote TLS time is not a substitute for Bangladesh field metrics. |
+
 ## What is verifiable automatically vs externally
 **An automated successful build or HTTP response does not prove** Google has indexed new pages, that GA4 has received all events, that Microsoft Clarity recordings are correctly masked, or that a Looker Studio chart uses the intended metric. Those require provider data, real browser QA, and sometimes time. They remain explicitly open, rather than being mislabeled as complete.
 
